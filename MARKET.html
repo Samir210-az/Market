@@ -3,19 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>SATIŞ MİNİ MARKET POS</title>
+    <title>SATIŞ MİNİ MARKET POS - Tam İnteqrasiya</title>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: #121212; margin: 0; padding: 0 0 70px 0; color: #eee; }
-        .app-header { background: #1e2a3a; color: #ffc107; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; position: sticky; top: 0; z-index: 100; }
+        .app-header { background: #1e2a3a; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; position: sticky; top: 0; z-index: 100; }
         .logo-area { display: flex; align-items: center; gap: 8px; background: #0f1a24; padding: 5px 12px; border-radius: 40px; }
         .logo-icon { width: 36px; height: 36px; background: #ffc107; color: #1e2a3a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
         .logo-text { font-weight: bold; font-size: 12px; color: #ffc107; }
         .daily-sales-header { background: #0f1a24; padding: 6px 15px; border-radius: 40px; font-size: 1.2rem; font-weight: bold; color: #ffc107; }
-        .daily-sales-header span { font-size: 1rem; }
         .tab-bar { display: flex; background: #0f1a24; position: sticky; top: 70px; z-index: 99; flex-wrap: wrap; }
         .tab-btn { flex: 1; text-align: center; padding: 10px 5px; background: #1e2a3a; color: #ccc; border: none; font-size: 12px; cursor: pointer; border-bottom: 3px solid transparent; }
         .tab-btn.active { background: #2c3e50; color: #ffc107; border-bottom-color: #ffc107; }
@@ -25,11 +24,11 @@
         button, .btn { background: #ffc107; color: #1e2a3a; border: none; padding: 12px; border-radius: 30px; font-weight: bold; width: 100%; margin-top: 5px; cursor: pointer; }
         button.danger { background: #e74c3c; color: white; }
         button.success { background: #27ae60; color: white; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 12px; background: #2c3e50; color: white; border: 1px solid #444; }
+        button.secondary { background: #3498db; color: white; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 12px; background: #2c3e50; color: white; border: 1px solid #444; }
         .flex-row { display: flex; gap: 10px; flex-wrap: wrap; }
-        .product-item, .company-item, .cart-item { background: #0f1a24; padding: 12px; border-radius: 14px; margin-bottom: 8px; border-left: 5px solid #ffc107; cursor: pointer; }
-        .company-item { cursor: pointer; transition: 0.2s; }
-        .company-item:hover { background: #2c3e50; }
+        .flex-row > * { flex: 1; }
+        .product-item, .company-item, .cart-item, .expense-item, .employee-item { background: #0f1a24; padding: 12px; border-radius: 14px; margin-bottom: 8px; border-left: 5px solid #ffc107; cursor: pointer; }
         .debt-red { color: #ff5555; font-weight: bold; font-size: 1.2rem; }
         .paid-green { color: #55ff55; }
         .total-purchased-blue { color: #55aaff; }
@@ -37,7 +36,7 @@
         .total-cart { text-align: right; font-size: 1.2rem; color: #ffc107; }
         .scanner-area { background: #0a121c; padding: 10px; border-radius: 16px; margin-bottom: 15px; }
         #reader-add, #reader-sell { width: 100%; max-width: 500px; margin: 0 auto; background: black; border-radius: 12px; min-height: 350px; }
-        footer { text-align: center; padding: 15px; font-size: 11px; background: #0f1a24; position: fixed; bottom: 0; width: 100%; }
+        footer { text-align: center; padding: 15px; font-size: 11px; background: #0f1a24; position: fixed; bottom: 0; width: 100%; z-index: 90; }
         .error-msg { background: #e74c3c; padding: 8px; border-radius: 10px; margin: 10px 0; text-align: center; }
         .info-msg { background: #2980b9; padding: 8px; border-radius: 10px; margin: 10px 0; text-align: center; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 200; justify-content: center; align-items: center; overflow-y: auto; }
@@ -46,456 +45,305 @@
         .report-table th, .report-table td { border: 1px solid #444; padding: 8px; text-align: left; }
         .report-table th { background: #2c3e50; color: #ffc107; }
         .btn-small { width: auto; padding: 6px 12px; font-size: 12px; display: inline-block; margin: 5px; }
-        .flex-btns { display: flex; gap: 10px; justify-content: flex-end; }
+        .flex-btns { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+        .employee-photo { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; background: #2c3e50; }
+        .search-results { max-height: 400px; overflow-y: auto; }
+        .warning-birthday { background: #e67e22; color: #1e2a3a; padding: 5px 10px; border-radius: 20px; font-weight: bold; }
+        @media (max-width: 600px) { .tab-btn { font-size: 10px; } }
     </style>
 </head>
 <body>
 <div class="app-header">
-    <div class="logo-area">
-        <div class="logo-icon">SG</div>
-        <div class="logo-text">SATIŞ MARKET POS</div>
-    </div>
-    <div class="daily-sales-header">
-        <span id="headerTodaySales">0</span> ₼
-    </div>
+    <div class="logo-area"><div class="logo-icon">SG</div><div class="logo-text">SATIŞ MARKET POS</div></div>
+    <div class="daily-sales-header"><span id="headerTodaySales">0</span> ₼</div>
 </div>
 <div class="tab-bar">
     <button class="tab-btn active" data-tab="home">🏠 Ana</button>
     <button class="tab-btn" data-tab="add-stock">📥 Mədaxil</button>
     <button class="tab-btn" data-tab="sell">🛒 Satış</button>
     <button class="tab-btn" data-tab="companies">🏢 Şirkətlər</button>
+    <button class="tab-btn" data-tab="expenses">💰 Xərclər</button>
+    <button class="tab-btn" data-tab="employees">👥 Əməkdaşlar</button>
     <button class="tab-btn" data-tab="reports">📈 Hesabat</button>
+    <button class="tab-btn" data-tab="search">🔍 Axtarış</button>
 </div>
 
+<!-- ANA SƏHİFƏ -->
 <div id="home" class="tab-content active">
-    <div class="card">
-        <h3>📦 Anbarda qalan mallar (stok ≤5 xəbərdarlıq)</h3>
-        <div id="productListHome"></div>
-        <input type="text" id="searchProductHome" placeholder="Axtar (ad/barkod)" onkeyup="filterProductsHome()">
-        <div id="searchResultsHome"></div>
-    </div>
-    <div class="card">
-        <h3>🏢 Şirkətlər (adına toxunun)</h3>
-        <div id="companyListHome"></div>
-    </div>
+    <div class="card"><h3>📦 Anbarda qalan mallar (stok ≤5)</h3><div id="productListHome"></div></div>
+    <div class="card"><h3>🏢 Şirkətlər (adına toxunun)</h3><div id="companyListHome"></div></div>
+    <div class="card"><h3>🎂 Doğum günü xəbərdarlıqları</h3><div id="birthdayAlert"></div></div>
 </div>
 
-<div id="add-stock" class="tab-content">
-    <div class="card">
-        <h3>📷 Barkod oxut (Mədaxil)</h3>
-        <div class="info-msg">🔦 İpucu: Barkodu işıqlı yerdə, kameraya 10-20 sm məsafədən tutun</div>
-        <button id="startScanAddBtn" class="btn success"><i class="fas fa-camera"></i> Kameranı aç</button>
-        <div id="scanAddArea" style="display:none;"><div id="reader-add"></div><button id="stopScanAddBtn" class="danger">Dayandır</button></div>
-        <div id="cameraAddError" class="error-msg" style="display:none;"></div>
-        <hr><h4>Məlumatlar</h4>
-        <div class="flex-row"><input type="text" id="manualBarcodeAdd" placeholder="Barkod əl ilə"><button id="findProductAddBtn" class="btn">Tap</button></div>
-        <div id="productInfoAdd" style="background:#0f1a24; padding:12px; border-radius:14px;">Məhsul seçilməyib</div>
-        <input type="number" id="addQuantity" placeholder="Miqdar" value="1">
-        <input type="number" id="addCostPrice" placeholder="Alış qiyməti (₼)" step="0.01">
-        <input type="number" id="addSalePrice" placeholder="Satış qiyməti (₼)" step="0.01">
-        <button id="confirmAddBtn" class="btn success">Mədaxil et</button>
-    </div>
-</div>
+<!-- MƏDAXİL -->
+<div id="add-stock" class="tab-content"><div class="card"><h3>📷 Barkod oxut (Mədaxil)</h3><div class="info-msg">🔦 İpucu: İşıqlı yer, 10-20 sm məsafə</div><button id="startScanAddBtn" class="btn success"><i class="fas fa-camera"></i> Kameranı aç</button><div id="scanAddArea" style="display:none;"><div id="reader-add"></div><button id="stopScanAddBtn" class="danger">Dayandır</button></div><div id="cameraAddError" class="error-msg" style="display:none;"></div><hr><div class="flex-row"><input type="text" id="manualBarcodeAdd" placeholder="Barkod əl ilə"><button id="findProductAddBtn" class="btn">Tap</button></div><div id="productInfoAdd" style="background:#0f1a24; padding:12px; border-radius:14px;">Məhsul seçilməyib</div><input type="number" id="addQuantity" placeholder="Miqdar" value="1"><input type="number" id="addCostPrice" placeholder="Alış qiyməti (₼)" step="0.01"><input type="number" id="addSalePrice" placeholder="Satış qiyməti (₼)" step="0.01"><button id="confirmAddBtn" class="btn success">Mədaxil et</button></div></div>
 
-<div id="sell" class="tab-content">
-    <div class="card">
-        <h3>📷 Barkodla satış</h3>
-        <div class="info-msg">🔦 İpucu: Barkodu işıqlı yerdə, kameraya 10-20 sm məsafədən tutun</div>
-        <button id="startScanSellBtn" class="btn success"><i class="fas fa-camera"></i> Kameranı aç</button>
-        <div id="scanSellArea" style="display:none;"><div id="reader-sell"></div><button id="stopScanSellBtn" class="danger">Dayandır</button></div>
-        <div id="cameraSellError" class="error-msg" style="display:none;"></div>
-        <hr><div class="flex-row"><input type="text" id="manualBarcodeSell" placeholder="Barkod əl ilə"><button id="addToCartBtn" class="btn">Səbətə at</button></div>
-        <div id="cartItems"></div><div class="total-cart" id="cartTotal">Cəmi: 0 ₼</div>
-        <button id="completeSaleBtn" class="btn success">Satışı tamamla</button>
-    </div>
-</div>
+<!-- SATIŞ -->
+<div id="sell" class="tab-content"><div class="card"><h3>📷 Barkodla satış</h3><div class="info-msg">🔦 İpucu: İşıqlı yer, 10-20 sm məsafə</div><button id="startScanSellBtn" class="btn success"><i class="fas fa-camera"></i> Kameranı aç</button><div id="scanSellArea" style="display:none;"><div id="reader-sell"></div><button id="stopScanSellBtn" class="danger">Dayandır</button></div><div id="cameraSellError" class="error-msg" style="display:none;"></div><hr><div class="flex-row"><input type="text" id="manualBarcodeSell" placeholder="Barkod əl ilə"><button id="addToCartBtn" class="btn">Səbətə at</button></div><div id="cartItems"></div><div class="total-cart" id="cartTotal">Cəmi: 0 ₼</div><button id="completeSaleBtn" class="btn success">Satışı tamamla</button></div></div>
 
-<div id="companies" class="tab-content">
-    <div class="card"><h3>➕ Yeni şirkət</h3><input id="companyName" placeholder="Ad"><input id="companyPhone" placeholder="Telefon"><button id="addCompanyBtn" class="btn success">Əlavə et</button></div>
-    <div class="card"><h3>📋 Şirkətlər (adına toxunun)</h3><div id="companyList"></div></div>
-    <div class="card"><h3>💰 Şirkətə ödəniş</h3><select id="paymentCompanySelect"></select><input type="number" id="paymentAmount" placeholder="Məbləğ (₼)"><button id="makePaymentBtn" class="btn">Ödəniş et</button></div>
-</div>
+<!-- ŞİRKƏTLƏR -->
+<div id="companies" class="tab-content"><div class="card"><h3>➕ Yeni şirkət</h3><input id="companyName" placeholder="Ad"><input id="companyPhone" placeholder="Telefon"><button id="addCompanyBtn" class="btn success">Əlavə et</button></div><div class="card"><h3>📋 Şirkətlər (adına toxunun)</h3><div id="companyList"></div></div><div class="card"><h3>💰 Şirkətə ödəniş</h3><select id="paymentCompanySelect"></select><input type="number" id="paymentAmount" placeholder="Məbləğ (₼)"><button id="makePaymentBtn" class="btn">Ödəniş et</button></div></div>
 
-<div id="reports" class="tab-content">
-    <div class="card"><h3>📊 Hesabatlar</h3><div class="flex-row"><button id="dailyReportBtn" class="btn">Gündəlik</button><button id="monthlyReportBtn" class="btn">Aylıq</button><button id="yearlyReportBtn" class="btn">İllik</button></div><div id="reportResult" style="margin-top:15px; background:#0f1a24; padding:12px; border-radius:14px;"></div></div>
-</div>
+<!-- XƏRCLƏR -->
+<div id="expenses" class="tab-content"><div class="card"><h3>➕ Yeni xərc</h3><input type="text" id="expenseName" placeholder="Xərc adı (vergi, kommunal, icarə, maaş, digər)"><select id="expenseCategory"><option value="Vergi">Vergi</option><option value="Kommunal">Kommunal</option><option value="İcarə">İcarə</option><option value="Əmək haqqı">Əmək haqqı</option><option value="Digər">Digər</option></select><input type="number" id="expenseAmount" placeholder="Məbləğ (₼)" step="0.01"><input type="date" id="expenseDate"><button id="addExpenseBtn" class="btn success">Əlavə et</button></div><div class="card"><h3>📋 Xərclər siyahısı</h3><div id="expensesList"></div></div></div>
+
+<!-- ƏMƏKDAŞLAR -->
+<div id="employees" class="tab-content"><div class="card"><h3>➕ Yeni əməkdaş</h3><input type="text" id="empName" placeholder="Ad Soyad"><input type="date" id="empBirthday"><input type="date" id="empHireDate"><input type="number" id="empSalary" placeholder="Aylıq maaş (₼)" step="0.01"><input type="file" id="empPhoto" accept="image/*"><button id="addEmployeeBtn" class="btn success">Əlavə et</button></div><div class="card"><h3>📋 Əməkdaşlar</h3><div id="employeesList"></div></div><div class="card"><h3>💰 Maaş ödənişi</h3><select id="salaryEmployeeSelect"></select><input type="number" id="salaryPaidAmount" placeholder="Ödənilən məbləğ (₼)"><input type="date" id="salaryPaidDate"><button id="recordSalaryBtn" class="btn">Maaşı qeyd et</button></div><div class="card"><h3>📊 Maaş cədvəli (şəkil çıxar)</h3><button id="downloadSalaryTableBtn" class="btn secondary">Maaş cədvəlini şəkil yüklə</button><div id="salaryTableView"></div></div></div>
+
+<!-- HESABATLAR -->
+<div id="reports" class="tab-content"><div class="card"><h3>📊 Dövriyyə hesabatları</h3><div class="flex-row"><select id="reportMonth"><option value="0">Yanvar</option><option value="1">Fevral</option><option value="2">Mart</option><option value="3">Aprel</option><option value="4">May</option><option value="5">İyun</option><option value="6">İyul</option><option value="7">Avqust</option><option value="8">Sentyabr</option><option value="9">Oktyabr</option><option value="10">Noyabr</option><option value="11">Dekabr</option></select><input type="number" id="reportYear" placeholder="İl" value="2025"></div><button id="generateMonthlyReportBtn" class="btn">Aylıq hesabat</button><button id="generateYearlyReportBtn" class="btn">İllik hesabat</button><div id="reportResult" style="margin-top:15px; background:#0f1a24; padding:12px; border-radius:14px;"></div><button id="downloadReportImageBtn" class="btn secondary">Hesabatı şəkil yüklə</button></div></div>
+
+<!-- AXTARIŞ -->
+<div id="search" class="tab-content"><div class="card"><h3>🔍 Axtarış</h3><input type="text" id="globalSearch" placeholder="Mal adı, şirkət adı, xərc adı..."><button id="doSearchBtn" class="btn">Axtar</button><div id="searchResults" class="search-results"></div></div></div>
 
 <footer><i class="fas fa-shield-alt"></i> Security group tərəfindən yaradılmışdır və bütün haqları qorunur.</footer>
 
-<!-- Modal for company products report -->
-<div id="companyReportModal" class="modal">
-    <div class="modal-content" id="companyReportContent">
-        <h3 id="modalCompanyName">Şirkət adı</h3>
-        <div id="reportContainer"></div>
-        <div class="flex-btns">
-            <button id="downloadReportImageBtn" class="btn success btn-small"><i class="fas fa-camera"></i> Şəkil yüklə (PNG)</button>
-            <button id="closeReportModalBtn" class="btn danger btn-small">Bağla</button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal for new product -->
-<div id="newProductModal" class="modal">
-    <div class="modal-content">
-        <h3>Yeni məhsul</h3>
-        <input type="text" id="newProductName" placeholder="Məhsul adı">
-        <input type="number" id="newProductPrice" placeholder="Satış qiyməti (₼)" step="0.01">
-        <label>Şirkət seçin:</label>
-        <select id="newProductCompany"></select>
-        <button id="confirmNewProductBtn" class="btn success">Yarat</button>
-        <button id="cancelNewProductBtn" class="btn danger">Ləğv et</button>
-    </div>
-</div>
+<!-- Modallar (şirkət hesabatı, şəkil çıxarma) -->
+<div id="companyReportModal" class="modal"><div class="modal-content" id="companyReportContent"><h3 id="modalCompanyName">Şirkət</h3><div id="reportContainer"></div><div class="flex-btns"><button id="downloadCompanyReportImageBtn" class="btn success btn-small">Şəkil yüklə</button><button id="closeCompanyReportModalBtn" class="btn danger btn-small">Bağla</button></div></div></div>
+<div id="newProductModal" class="modal"><div class="modal-content"><h3>Yeni məhsul</h3><input id="newProductName" placeholder="Ad"><input id="newProductPrice" placeholder="Satış qiyməti"><select id="newProductCompany"></select><button id="confirmNewProductBtn" class="btn success">Yarat</button><button id="cancelNewProductBtn" class="btn danger">Ləğv et</button></div></div>
 
 <script>
-    // ======================== DATA MODELS ========================
-    let companies = [], products = [], sales = [], cart = [];
-    let pendingBarcode = null;
-
+    // ------------------ DATA MODELS ------------------
+    let companies = [], products = [], sales = [], expenses = [], employees = [], salaryPayments = [];
+    
     function loadData() {
         try {
-            const c = localStorage.getItem("market_companies"); if(c) companies = JSON.parse(c);
-            const p = localStorage.getItem("market_products"); if(p) products = JSON.parse(p);
-            const s = localStorage.getItem("market_sales"); if(s) sales = JSON.parse(s);
+            if(localStorage.getItem("market_companies")) companies = JSON.parse(localStorage.getItem("market_companies"));
+            if(localStorage.getItem("market_products")) products = JSON.parse(localStorage.getItem("market_products"));
+            if(localStorage.getItem("market_sales")) sales = JSON.parse(localStorage.getItem("market_sales"));
+            if(localStorage.getItem("market_expenses")) expenses = JSON.parse(localStorage.getItem("market_expenses"));
+            if(localStorage.getItem("market_employees")) employees = JSON.parse(localStorage.getItem("market_employees"));
+            if(localStorage.getItem("market_salaryPayments")) salaryPayments = JSON.parse(localStorage.getItem("market_salaryPayments"));
         } catch(e) {}
-        updateBalancesAndStats();
+        updateStats();
     }
-    function saveCompanies() { localStorage.setItem("market_companies", JSON.stringify(companies)); }
-    function saveProducts() { localStorage.setItem("market_products", JSON.stringify(products)); }
-    function saveSales() { localStorage.setItem("market_sales", JSON.stringify(sales)); }
-    
-    function updateBalancesAndStats() {
+    function saveAll() {
+        localStorage.setItem("market_companies", JSON.stringify(companies));
+        localStorage.setItem("market_products", JSON.stringify(products));
+        localStorage.setItem("market_sales", JSON.stringify(sales));
+        localStorage.setItem("market_expenses", JSON.stringify(expenses));
+        localStorage.setItem("market_employees", JSON.stringify(employees));
+        localStorage.setItem("market_salaryPayments", JSON.stringify(salaryPayments));
+    }
+    function updateStats() {
         companies.forEach(comp => {
             const compProducts = products.filter(p => p.companyId === comp.id);
-            comp.stockValue = compProducts.reduce((sum, p) => sum + (p.quantity * (p.costPrice || 0)), 0);
+            comp.stockValue = compProducts.reduce((s,p)=> s + (p.quantity * (p.costPrice||0)),0);
             let totalSales = 0;
-            sales.forEach(sale => {
-                sale.items.forEach(item => {
-                    const prod = products.find(p => p.barcode === item.barcode);
-                    if (prod && prod.companyId === comp.id) {
-                        totalSales += item.quantity * item.price;
-                    }
-                });
-            });
+            sales.forEach(sale => sale.items.forEach(item => { const prod = products.find(p=>p.barcode===item.barcode); if(prod && prod.companyId===comp.id) totalSales += item.quantity*item.price; }));
             comp.totalSales = totalSales;
-            comp.balance = (comp.totalPurchased || 0) - (comp.totalPaid || 0);
+            comp.balance = (comp.totalPurchased||0) - (comp.totalPaid||0);
         });
-        saveCompanies();
+        saveAll();
     }
-
     function getCompanyName(id) { let c = companies.find(c=>c.id==id); return c ? c.name : "Naməlum"; }
     
-    // Xəbərdarlıq mesajı tamamilə ləğv edildi - yalnız vizual işarə
-    function checkLowStock() {
-        // Heç bir popup mesajı çıxmır
-        renderHomeProducts();
-    }
-    
-    function renderHomeProducts() {
+    // --- Render funksiyaları ---
+    function renderHome() {
         let container = document.getElementById("productListHome");
-        if(!container) return;
-        let html = products.map(p=>`<div class="product-item"><b>${p.name}</b> (${p.barcode})<br> Satış: ${p.price} ₼ | ${p.quantity<=5?`<span class="badge">⚠️ ${p.quantity}</span>`:`Stok: ${p.quantity}`}<br> Şirkət: ${getCompanyName(p.companyId)}</div>`).join("");
-        container.innerHTML = html || "<i>Məhsul yoxdur</i>";
-        filterProductsHome();
+        if(container) container.innerHTML = products.map(p=>`<div class="product-item"><b>${p.name}</b> (${p.barcode})<br> Satış: ${p.price} ₼ | ${p.quantity<=5?`<span class="badge">⚠️ ${p.quantity}</span>`:`Stok: ${p.quantity}`}<br> Şirkət: ${getCompanyName(p.companyId)}</div>`).join("") || "<i>Məhsul yoxdur</i>";
+        let homeComp = document.getElementById("companyListHome");
+        if(homeComp) homeComp.innerHTML = companies.map(c=>`<div class="company-item" onclick="showCompanyReport(${c.id})"><b>${c.name}</b> | Borc: <span class="debt-red">${(c.balance||0).toFixed(2)} ₼</span> | Satış: ${(c.totalSales||0).toFixed(2)} ₼</div>`).join("") || "Şirkət yoxdur";
+        checkBirthdayAlerts();
     }
-    function filterProductsHome() {
-        let search = document.getElementById("searchProductHome")?.value.toLowerCase();
-        let container = document.getElementById("searchResultsHome");
-        if(!container) return;
-        let filtered = products.filter(p=>p.name.toLowerCase().includes(search) || p.barcode.includes(search));
-        if(search && search.length){
-            container.innerHTML = filtered.map(p=>`<div class="product-item"><b>${p.name}</b> | ${p.barcode}<br> Say: ${p.quantity} | Satış: ${p.price} ₼ | Alış: ${p.costPrice} ₼<br> Şirkət: ${getCompanyName(p.companyId)}</div>`).join("") || "<i>Nəticə yoxdur</i>";
-        } else container.innerHTML = "";
-    }
-    
-    function renderCompanyLists() {
-        // Şirkətlər səhifəsi
+    function renderCompanies() {
         let container = document.getElementById("companyList");
-        if(container) {
-            let html = companies.map(c=>`<div class="company-item" onclick="showCompanyReport(${c.id})"><b>${c.name}</b> (Tel: ${c.phone||'-'})<br>
-                <span class="total-purchased-blue">📦 Ümumi alış: ${(c.totalPurchased||0).toFixed(2)} ₼</span><br>
-                <span class="paid-green">✅ Ödənilən: ${(c.totalPaid||0).toFixed(2)} ₼</span><br>
-                <span class="debt-red">💳 Cari borc: ${(c.balance||0).toFixed(2)} ₼</span><br>
-                <span>📈 Ümumi satış: ${(c.totalSales||0).toFixed(2)} ₼</span><br>
-                <span>📦 Anbar dəyəri (alışla): ${(c.stockValue||0).toFixed(2)} ₼</span></div>`).join("");
-            container.innerHTML = html || "Şirkət yoxdur";
-        }
-        // Ana səhifə şirkət siyahısı (kliklənə bilən)
-        let homeContainer = document.getElementById("companyListHome");
-        if(homeContainer) {
-            let html = companies.map(c=>`<div class="company-item" onclick="showCompanyReport(${c.id})"><b>${c.name}</b> | Borc: <span class="debt-red">${(c.balance||0).toFixed(2)} ₼</span> | Satış: ${(c.totalSales||0).toFixed(2)} ₼ | Anbar dəyəri: ${(c.stockValue||0).toFixed(2)} ₼</div>`).join("");
-            homeContainer.innerHTML = html || "Şirkət yoxdur";
-        }
-        // ödəniş select
+        if(container) container.innerHTML = companies.map(c=>`<div class="company-item" onclick="showCompanyReport(${c.id})"><b>${c.name}</b> (Tel: ${c.phone||'-'})<br>📦 Alış: ${(c.totalPurchased||0).toFixed(2)} ₼ | ✅ Ödənilən: ${(c.totalPaid||0).toFixed(2)} ₼<br>💳 Borc: <span class="debt-red">${(c.balance||0).toFixed(2)} ₼</span> | 📈 Satış: ${(c.totalSales||0).toFixed(2)} ₼ | 📦 Anbar dəyəri: ${(c.stockValue||0).toFixed(2)} ₼</div>`).join("") || "Şirkət yoxdur";
         let select = document.getElementById("paymentCompanySelect");
-        if(select) { select.innerHTML = '<option value="">Seçin</option>'+companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join(""); }
+        if(select) select.innerHTML = '<option value="">Seçin</option>'+companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
+    }
+    function renderExpenses() {
+        let container = document.getElementById("expensesList");
+        if(container) container.innerHTML = expenses.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(e=>`<div class="expense-item"><b>${e.name}</b> (${e.category}) | ${e.amount} ₼ | ${e.date}<br><button class="btn-small danger" onclick="deleteExpense(${e.id})">Sil</button></div>`).join("") || "Xərc yoxdur";
+    }
+    function renderEmployees() {
+        let container = document.getElementById("employeesList");
+        if(container) container.innerHTML = employees.map(emp=>`<div class="employee-item"><b>${emp.name}</b> | Maaş: ${emp.salary} ₼ | Doğum: ${emp.birthday} | İşə başlama: ${emp.hireDate}<br>${emp.photo ? `<img src="${emp.photo}" class="employee-photo">` : ""}<button class="btn-small danger" onclick="deleteEmployee(${emp.id})">Sil</button></div>`).join("") || "Əməkdaş yoxdur";
+        let selectEmp = document.getElementById("salaryEmployeeSelect");
+        if(selectEmp) selectEmp.innerHTML = '<option value="">Seçin</option>'+employees.map(e=>`<option value="${e.id}">${e.name} (${e.salary} ₼)</option>`).join("");
+        renderSalaryTable();
+    }
+    function renderSalaryTable() {
+        let tableHtml = `<table class="report-table"><tr><th>Əməkdaş</th><th>Aylıq maaş</th><th>Son ödəniş</th><th>Son ödəniş tarixi</th></tr>`;
+        employees.forEach(emp => {
+            let lastPayment = salaryPayments.filter(sp=>sp.employeeId===emp.id).sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
+            tableHtml += `<tr><td>${emp.name}</td><td>${emp.salary} ₼</td><td>${lastPayment ? lastPayment.amount : "Ödənilməyib"}</td><td>${lastPayment ? lastPayment.date : "-"}</td></tr>`;
+        });
+        tableHtml += `</table><div>Ümumi aylıq maaş fondu: ${employees.reduce((s,e)=>s+e.salary,0).toFixed(2)} ₼</div>`;
+        document.getElementById("salaryTableView").innerHTML = tableHtml;
+    }
+    function checkBirthdayAlerts() {
+        let today = new Date();
+        let alerts = [];
+        employees.forEach(emp => {
+            let birth = new Date(emp.birthday);
+            let nextBirth = new Date(today.getFullYear(), birth.getMonth(), birth.getDate());
+            if(nextBirth < today) nextBirth.setFullYear(today.getFullYear()+1);
+            let diffDays = Math.ceil((nextBirth - today) / (1000*60*60*24));
+            if(diffDays <= 2 && diffDays >= 0) alerts.push(`${emp.name} - doğum gününə ${diffDays} gün qaldı!`);
+        });
+        let alertDiv = document.getElementById("birthdayAlert");
+        if(alertDiv) alertDiv.innerHTML = alerts.length ? `<div class="warning-birthday">🎂 ${alerts.join(" | ")}</div>` : "Yaxın doğum günü yoxdur";
     }
     
-    // Şirkət hesabatını göstər (modal)
-    window.showCompanyReport = function(companyId) {
-        const company = companies.find(c => c.id === companyId);
-        if(!company) return;
-        const compProducts = products.filter(p => p.companyId === companyId);
-        const stockTotal = compProducts.reduce((sum, p) => sum + (p.quantity * (p.costPrice || 0)), 0);
-        
-        let tableHtml = `<table class="report-table">
-            <thead><tr><th>Məhsul adı</th><th>Barkod</th><th>Say</th><th>Alış qiyməti</th><th>Satış qiyməti</th><th>Qalıq dəyəri (alış)</th></tr></thead><tbody>`;
-        compProducts.forEach(p => {
-            tableHtml += `<tr>
-                <td>${p.name}</td>
-                <td>${p.barcode}</td>
-                <td>${p.quantity}</td>
-                <td>${(p.costPrice || 0).toFixed(2)} ₼</td>
-                <td>${p.price.toFixed(2)} ₼</td>
-                <td>${((p.costPrice || 0) * p.quantity).toFixed(2)} ₼</td>
-            </tr>`;
-        });
-        if(compProducts.length === 0) tableHtml += `<tr><td colspan="6">Bu şirkətə aid heç bir məhsul yoxdur</td></tr>`;
-        tableHtml += `</tbody></table>`;
-        
-        const summaryHtml = `<div style="margin-top:15px; padding:10px; background:#0f1a24; border-radius:12px;">
-            <strong>📌 Xülasə:</strong><br>
-            💳 Cari borc: <span class="debt-red">${company.balance.toFixed(2)} ₼</span><br>
-            📦 Anbarda qalan malların alış dəyəri cəmi: <strong>${stockTotal.toFixed(2)} ₼</strong>
-        </div>`;
-        
-        document.getElementById("modalCompanyName").innerHTML = `${company.name} - Malların siyahısı`;
-        document.getElementById("reportContainer").innerHTML = tableHtml + summaryHtml;
-        document.getElementById("companyReportModal").style.display = "flex";
-    };
+    // --- Xərc silmə ---
+    window.deleteExpense = function(id) { expenses = expenses.filter(e=>e.id!==id); saveAll(); renderExpenses(); };
+    window.deleteEmployee = function(id) { employees = employees.filter(e=>e.id!==id); salaryPayments = salaryPayments.filter(sp=>sp.employeeId!==id); saveAll(); renderEmployees(); };
     
-    // Şəkil yükləmə (təmiz, əlavə düyməsiz)
-    document.getElementById("downloadReportImageBtn")?.addEventListener("click", async () => {
-        const modalContent = document.getElementById("companyReportContent");
-        // Klon yaradırıq ki, orijinal modal dəyişməsin
-        const clone = modalContent.cloneNode(true);
-        // Klondan düymələri olan div-i silirik
-        const btnsDiv = clone.querySelector(".flex-btns");
-        if(btnsDiv) btnsDiv.remove();
-        // Həmçinin əgər başqa düymələr varsa təmizlə
-        clone.style.padding = "20px";
-        clone.style.maxHeight = "none";
-        clone.style.overflow = "visible";
+    // --- Axtarış ---
+    function globalSearch() {
+        let term = document.getElementById("globalSearch").value.toLowerCase();
+        let results = [];
+        // Məhsul axtarışı
+        products.forEach(p => {
+            if(p.name.toLowerCase().includes(term) || p.barcode.includes(term)) {
+                let company = companies.find(c=>c.id===p.companyId);
+                let lastReceipt = "Tarix yoxdur"; // sadəlik üçün son mədaxil tarixi saxlanmır, amma əlavə edilə bilər
+                results.push(`<div class="product-item">📦 MAL: ${p.name} | Barkod: ${p.barcode} | Stok: ${p.quantity} | Alış: ${p.costPrice}₼ | Satış: ${p.price}₼ | Şirkət: ${company?.name} | Son qəbul: ${lastReceipt}</div>`);
+            }
+        });
+        // Şirkət axtarışı
+        companies.forEach(c => {
+            if(c.name.toLowerCase().includes(term)) results.push(`<div class="company-item">🏢 ŞİRKƏT: ${c.name} | Borc: ${c.balance}₼ | Telefon: ${c.phone||'-'}</div>`);
+        });
+        // Xərc axtarışı
+        expenses.forEach(e => {
+            if(e.name.toLowerCase().includes(term)) results.push(`<div class="expense-item">💰 XƏRC: ${e.name} (${e.category}) | ${e.amount}₼ | Tarix: ${e.date}</div>`);
+        });
+        document.getElementById("searchResults").innerHTML = results.length ? results.join("") : "Nəticə tapılmadı";
+    }
+    
+    // --- Hesabatlar (gəlir-xərc) ---
+    function getMonthlyRevenue(year, month) {
+        let start = new Date(year, month, 1);
+        let end = new Date(year, month+1, 0, 23,59,59);
+        return sales.filter(s=>{ let d=new Date(s.date); return d>=start && d<=end; }).reduce((sum,s)=>sum+s.totalAmount,0);
+    }
+    function getMonthlyExpenses(year, month) {
+        let start = new Date(year, month, 1);
+        let end = new Date(year, month+1, 0, 23,59,59);
+        return expenses.filter(e=>{ let d=new Date(e.date); return d>=start && d<=end; }).reduce((sum,e)=>sum+e.amount,0);
+    }
+    function generateMonthlyReport() {
+        let year = parseInt(document.getElementById("reportYear").value);
+        let month = parseInt(document.getElementById("reportMonth").value);
+        let revenue = getMonthlyRevenue(year, month);
+        let expense = getMonthlyExpenses(year, month);
+        let profit = revenue - expense;
+        document.getElementById("reportResult").innerHTML = `<div id="reportPrintable"><h3>${year}-ci il ${month+1}-ci ay hesabatı</h3><table class="report-table"><tr><th>Gəlir (satış)</th><td>${revenue.toFixed(2)} ₼</td></tr><tr><th>Xərclər</th><td>${expense.toFixed(2)} ₼</td></tr><tr><th>Xalis gəlir</th><td class="${profit>=0?'paid-green':'debt-red'}">${profit.toFixed(2)} ₼</td></tr></table></div>`;
+    }
+    function generateYearlyReport() {
+        let year = parseInt(document.getElementById("reportYear").value);
+        let revenue = 0, expense = 0;
+        for(let m=0;m<12;m++) { revenue += getMonthlyRevenue(year,m); expense += getMonthlyExpenses(year,m); }
+        let profit = revenue - expense;
+        document.getElementById("reportResult").innerHTML = `<div id="reportPrintable"><h3>${year}-ci il illik hesabat</h3><table class="report-table"><tr><th>Ümumi gəlir</th><td>${revenue.toFixed(2)} ₼</td></tr><tr><th>Ümumi xərclər</th><td>${expense.toFixed(2)} ₼</td></tr><tr><th>Xalis gəlir</th><td class="${profit>=0?'paid-green':'debt-red'}">${profit.toFixed(2)} ₼</td></tr></table></div>`;
+    }
+    async function downloadReportImage() {
+        let element = document.getElementById("reportPrintable");
+        if(!element) return alert("Hesabat yaradılmayıb");
+        let clone = element.cloneNode(true);
+        clone.style.background = "#1e2a3a"; clone.style.padding = "20px"; clone.style.borderRadius = "16px";
         document.body.appendChild(clone);
         try {
-            const canvas = await html2canvas(clone, { scale: 2, backgroundColor: "#1e2a3a" });
-            const link = document.createElement("a");
+            let canvas = await html2canvas(clone, {scale:2});
+            let link = document.createElement("a");
+            link.download = `hesabat_${Date.now()}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        } catch(e) { alert("Xəta: "+e); }
+        finally { document.body.removeChild(clone); }
+    }
+    
+    // --- Şirkət hesabatı şəkil ---
+    window.showCompanyReport = function(companyId) {
+        let company = companies.find(c=>c.id===companyId);
+        let compProducts = products.filter(p=>p.companyId===companyId);
+        let stockTotal = compProducts.reduce((s,p)=>s+(p.quantity*(p.costPrice||0)),0);
+        let tableHtml = `<table class="report-table"><tr><th>Məhsul</th><th>Barkod</th><th>Say</th><th>Alış qiyməti</th><th>Satış qiyməti</th><th>Qalıq dəyəri</th></tr>`+compProducts.map(p=>`<tr><td>${p.name}</td><td>${p.barcode}</td><td>${p.quantity}</td><td>${(p.costPrice||0).toFixed(2)} ₼</td><td>${p.price.toFixed(2)} ₼</td><td>${((p.costPrice||0)*p.quantity).toFixed(2)} ₼</td></tr>`).join("")+"</table>";
+        if(!compProducts.length) tableHtml = "<p>Məhsul yoxdur</p>";
+        let summary = `<div><strong>Xülasə:</strong><br>💳 Cari borc: <span class="debt-red">${company.balance.toFixed(2)} ₼</span><br>📦 Anbar dəyəri: ${stockTotal.toFixed(2)} ₼</div>`;
+        document.getElementById("modalCompanyName").innerHTML = `${company.name} - Malların siyahısı`;
+        document.getElementById("reportContainer").innerHTML = tableHtml + summary;
+        document.getElementById("companyReportModal").style.display = "flex";
+    };
+    async function downloadCompanyReportImage() {
+        let content = document.getElementById("companyReportContent").cloneNode(true);
+        let btns = content.querySelector(".flex-btns");
+        if(btns) btns.remove();
+        content.style.padding = "20px"; content.style.background = "#1e2a3a";
+        document.body.appendChild(content);
+        try {
+            let canvas = await html2canvas(content, {scale:2});
+            let link = document.createElement("a");
             link.download = `company_report_${Date.now()}.png`;
             link.href = canvas.toDataURL();
             link.click();
-        } catch(err) { alert("Şəkil yaratmaq alınmadı: "+err); }
-        finally { document.body.removeChild(clone); }
-    });
-    document.getElementById("closeReportModalBtn")?.addEventListener("click", () => {
-        document.getElementById("companyReportModal").style.display = "none";
-    });
-    
-    function findProductByBarcode(barcode) { return products.find(p=>p.barcode===barcode); }
-    
-    // Modal ilə yeni məhsul
-    function showNewProductModal(barcode) {
-        if(companies.length === 0) {
-            alert("Əvvəlcə şirkət əlavə edin!");
-            return null;
-        }
-        pendingBarcode = barcode;
-        const modal = document.getElementById("newProductModal");
-        const select = document.getElementById("newProductCompany");
-        select.innerHTML = companies.map(c => `<option value="${c.id}">${c.name}</option>`).join("");
-        document.getElementById("newProductName").value = "";
-        document.getElementById("newProductPrice").value = "";
-        modal.style.display = "flex";
-        return new Promise((resolve) => {
-            window.resolveNewProduct = resolve;
-        });
+        } catch(e) { alert(e); }
+        finally { document.body.removeChild(content); }
     }
-    document.getElementById("confirmNewProductBtn")?.addEventListener("click", () => {
-        const name = document.getElementById("newProductName").value.trim();
-        const price = parseFloat(document.getElementById("newProductPrice").value);
-        const companyId = parseInt(document.getElementById("newProductCompany").value);
-        if(!name || isNaN(price)) { alert("Ad və satış qiyməti daxil edin"); return; }
-        const prod = { barcode: pendingBarcode, name, price, quantity: 0, companyId, costPrice: 0 };
-        products.push(prod);
-        saveProducts();
-        document.getElementById("newProductModal").style.display = "none";
-        if(window.resolveNewProduct) window.resolveNewProduct(prod);
-        renderHomeProducts(); renderCompanyLists(); updateBalancesAndStats(); saveCompanies();
-        alert("Məhsul yaradıldı");
-    });
-    document.getElementById("cancelNewProductBtn")?.addEventListener("click", () => {
-        document.getElementById("newProductModal").style.display = "none";
-        if(window.resolveNewProduct) window.resolveNewProduct(null);
-    });
     
-    let currentAddProduct = null;
-    document.getElementById("findProductAddBtn")?.addEventListener("click", async () => {
-        let barcode = document.getElementById("manualBarcodeAdd").value.trim();
-        if(!barcode) return alert("Barkod daxil edin");
-        let prod = findProductByBarcode(barcode);
-        if(!prod) {
-            if(confirm("Məhsul tapılmadı. Yenisini yaradırsınız?")) {
-                const newProd = await showNewProductModal(barcode);
-                if(newProd) prod = newProd;
-                else return;
-            } else return;
-        }
-        currentAddProduct = prod;
-        document.getElementById("productInfoAdd").innerHTML = `<b>${prod.name}</b> | Stok:${prod.quantity} | Şirkət:${getCompanyName(prod.companyId)}<br><span style="color:#ffc107;">Cari satış qiyməti: ${prod.price} ₼</span>`;
-    });
-    document.getElementById("confirmAddBtn")?.addEventListener("click", () => {
-        if(!currentAddProduct) return alert("Məhsul seçilməyib");
-        let qty = parseInt(document.getElementById("addQuantity").value);
-        let cost = parseFloat(document.getElementById("addCostPrice").value);
-        let newPrice = parseFloat(document.getElementById("addSalePrice").value);
-        if(isNaN(qty)||qty<=0) return alert("Miqdar düzgün deyil");
-        if(!isNaN(newPrice) && newPrice>0) currentAddProduct.price = newPrice;
-        currentAddProduct.quantity += qty;
-        currentAddProduct.costPrice = cost;
-        let company = companies.find(c=>c.id==currentAddProduct.companyId);
-        if(company) { company.totalPurchased = (company.totalPurchased||0) + qty*cost; }
-        saveProducts(); updateBalancesAndStats(); saveCompanies();
-        renderHomeProducts(); renderCompanyLists();
-        alert(`${currentAddProduct.name} - ${qty} ədəd mədaxil edildi. Yeni stok: ${currentAddProduct.quantity}`);
-        document.getElementById("addQuantity").value=1; document.getElementById("addCostPrice").value=""; document.getElementById("addSalePrice").value="";
-        currentAddProduct=null; document.getElementById("productInfoAdd").innerHTML="Məhsul seçilməyib";
-        checkLowStock();
-    });
-    
-    // Səbət
-    function renderCart() { let total=0; let html=cart.map((item,idx)=> { let t=item.quantity*item.price; total+=t; return `<div class="cart-item"><b>${item.name}</b> | ${item.quantity} x ${item.price}₼ = ${t}₼ <button class="danger" style="width:auto;padding:2px 8px;" onclick="removeFromCart(${idx})"><i class="fas fa-trash"></i></button></div>`; }).join(""); document.getElementById("cartItems").innerHTML = html || "Səbət boşdur"; document.getElementById("cartTotal").innerHTML = `Cəmi: ${total.toFixed(2)} ₼`; }
-    window.removeFromCart = function(idx){ cart.splice(idx,1); renderCart(); };
-    function addToCartByBarcode(barcode){
-        let product = findProductByBarcode(barcode);
-        if(!product){ alert("Məhsul bazada yoxdur!"); return false; }
-        if(product.quantity<=0){ alert("Stokda yoxdur!"); return false; }
-        let existing = cart.find(i=>i.barcode===barcode);
-        if(existing){ if(product.quantity < existing.quantity+1){ alert("Anbar kifayət deyil"); return false; } existing.quantity++; }
-        else { cart.push({ barcode, name: product.name, quantity:1, price: product.price }); }
-        renderCart(); return true;
-    }
-    document.getElementById("addToCartBtn")?.addEventListener("click",()=>{ let barcode = document.getElementById("manualBarcodeSell").value.trim(); if(barcode) addToCartByBarcode(barcode); else alert("Barkod daxil edin"); });
-    document.getElementById("completeSaleBtn")?.addEventListener("click",()=>{
-        if(cart.length===0) return alert("Səbət boşdur");
-        let totalAmount=0, saleItems=[];
-        for(let item of cart){
-            let product = findProductByBarcode(item.barcode);
-            if(!product || product.quantity<item.quantity){ alert(`${item.name} üçün stok yetərli deyil`); return; }
-            totalAmount += item.quantity*item.price;
-            saleItems.push({ barcode:item.barcode, name:item.name, quantity:item.quantity, price:item.price });
-            product.quantity -= item.quantity;
-        }
-        sales.push({ id:Date.now(), date:new Date().toISOString(), totalAmount, items:saleItems });
-        saveProducts(); saveSales(); cart=[]; renderCart(); renderHomeProducts(); updateBalancesAndStats(); saveCompanies(); renderCompanyLists(); checkLowStock();
-        alert(`Satış tamam! Məbləğ: ${totalAmount.toFixed(2)} ₼`);
-        updateTodaySalesDisplay();
-    });
-    
-    // ======================== KAMERA SKANER ========================
-    let html5QrCodeAdd = null, html5QrCodeSell = null;
-    function stopAllScanners(){
-        if(html5QrCodeAdd) { html5QrCodeAdd.stop().catch(()=>{}); html5QrCodeAdd = null; }
-        if(html5QrCodeSell) { html5QrCodeSell.stop().catch(()=>{}); html5QrCodeSell = null; }
-        document.getElementById("scanAddArea") && (document.getElementById("scanAddArea").style.display = "none");
-        document.getElementById("scanSellArea") && (document.getElementById("scanSellArea").style.display = "none");
-    }
-    async function requestCameraPermission() {
+    // --- Maaş cədvəli şəkil ---
+    async function downloadSalaryTableImage() {
+        let tableDiv = document.getElementById("salaryTableView").cloneNode(true);
+        tableDiv.style.background = "#1e2a3a"; tableDiv.style.padding = "20px"; tableDiv.style.borderRadius = "16px";
+        document.body.appendChild(tableDiv);
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            stream.getTracks().forEach(track => track.stop());
-            return true;
-        } catch (err) { return false; }
+            let canvas = await html2canvas(tableDiv, {scale:2});
+            let link = document.createElement("a");
+            link.download = `salary_table_${Date.now()}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        } catch(e) { alert(e); }
+        finally { document.body.removeChild(tableDiv); }
     }
-    async function startScanner(elementId, onSuccess, onError, errorDivId) {
-        try {
-            const hasPermission = await requestCameraPermission();
-            if (!hasPermission) throw new Error("Kamera icazəsi verilməyib");
-            const scanner = new Html5Qrcode(elementId);
-            const config = { fps: 15, qrbox: { width: 350, height: 350 }, aspectRatio: 1.0 };
-            try {
-                await scanner.start({ facingMode: "environment" }, config, onSuccess, onError);
-            } catch (e) {
-                await scanner.start({ facingMode: "user" }, config, onSuccess, onError);
-            }
-            return scanner;
-        } catch (err) {
-            let msg = "Kamera açılmadı. İşıqlı yer və 10-20 sm məsafə yoxlayın.";
-            if (err.message.includes("icazə") || err.name === "NotAllowedError") msg = "Kamera icazəsi verilməyib. Ayarlardan icazə verin";
-            else if (err.name === "NotFoundError") msg = "Kamera tapılmadı";
-            if (errorDivId) { document.getElementById(errorDivId).innerHTML = "⚠️ " + msg; document.getElementById(errorDivId).style.display = "block"; }
-            return null;
-        }
-    }
-    document.getElementById("startScanAddBtn")?.addEventListener("click", async () => {
-        stopAllScanners();
-        document.getElementById("scanAddArea").style.display = "block";
-        document.getElementById("cameraAddError").style.display = "none";
-        const scanner = await startScanner("reader-add", 
-            (decodedText) => {
-                document.getElementById("manualBarcodeAdd").value = decodedText;
-                document.getElementById("findProductAddBtn").click();
-                if (html5QrCodeAdd) { html5QrCodeAdd.stop().catch(()=>{}); html5QrCodeAdd = null; }
-                document.getElementById("scanAddArea").style.display = "none";
-            }, 
-            (err) => { console.warn("Skan xətası", err); },
-            "cameraAddError"
-        );
-        if (scanner) html5QrCodeAdd = scanner;
-        else document.getElementById("scanAddArea").style.display = "none";
-    });
-    document.getElementById("startScanSellBtn")?.addEventListener("click", async () => {
-        stopAllScanners();
-        document.getElementById("scanSellArea").style.display = "block";
-        document.getElementById("cameraSellError").style.display = "none";
-        const scanner = await startScanner("reader-sell", 
-            (decodedText) => {
-                document.getElementById("manualBarcodeSell").value = decodedText;
-                addToCartByBarcode(decodedText);
-                if (html5QrCodeSell) { html5QrCodeSell.stop().catch(()=>{}); html5QrCodeSell = null; }
-                document.getElementById("scanSellArea").style.display = "none";
-            }, 
-            (err) => { console.warn(err); },
-            "cameraSellError"
-        );
-        if (scanner) html5QrCodeSell = scanner;
-        else document.getElementById("scanSellArea").style.display = "none";
-    });
-    document.getElementById("stopScanAddBtn")?.addEventListener("click", () => { if(html5QrCodeAdd) { html5QrCodeAdd.stop(); html5QrCodeAdd=null; } document.getElementById("scanAddArea").style.display="none"; });
-    document.getElementById("stopScanSellBtn")?.addEventListener("click", () => { if(html5QrCodeSell) { html5QrCodeSell.stop(); html5QrCodeSell=null; } document.getElementById("scanSellArea").style.display="none"; });
     
-    // Şirkət əməliyyatları
-    document.getElementById("addCompanyBtn")?.addEventListener("click",()=>{
-        let name = document.getElementById("companyName").value.trim();
-        let phone = document.getElementById("companyPhone").value.trim();
-        if(!name) return alert("Şirkət adı vacib");
-        companies.push({ id:Date.now(), name, phone, totalPurchased:0, totalPaid:0, balance:0, totalSales:0, stockValue:0 });
-        saveCompanies(); renderCompanyLists();
-        document.getElementById("companyName").value=""; document.getElementById("companyPhone").value="";
-        alert("Şirkət əlavə edildi");
-    });
-    document.getElementById("makePaymentBtn")?.addEventListener("click",()=>{
-        let compId = parseInt(document.getElementById("paymentCompanySelect").value);
-        let amount = parseFloat(document.getElementById("paymentAmount").value);
-        if(!compId || isNaN(amount) || amount<=0) return alert("Düzgün məlumat daxil edin");
-        let company = companies.find(c=>c.id===compId);
-        if(company){ company.totalPaid = (company.totalPaid||0)+amount; company.balance = (company.totalPurchased||0)-company.totalPaid; saveCompanies(); renderCompanyLists(); alert(`${company.name} şirkətinə ${amount}₼ ödəniş edildi. Borc: ${company.balance.toFixed(2)}₼`); document.getElementById("paymentAmount").value=""; }
-        else alert("Şirkət tapılmadı");
-    });
-    // Hesabatlar
-    function getSalesByPeriod(start,end){ return sales.filter(s=>{ let d=new Date(s.date); return d>=start && d<=end; }).reduce((sum,s)=>sum+s.totalAmount,0); }
-    function updateTodaySalesDisplay(){
-        let today=new Date(); today.setHours(0,0,0,0); let tomorrow=new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
-        let total=getSalesByPeriod(today,tomorrow);
-        document.getElementById("headerTodaySales") && (document.getElementById("headerTodaySales").innerText = total.toFixed(2));
-    }
-    document.getElementById("dailyReportBtn")?.addEventListener("click",()=>{ let t=new Date(); t.setHours(0,0,0,0); let tm=new Date(t); tm.setDate(tm.getDate()+1); document.getElementById("reportResult").innerHTML=`<b>Gündəlik satış:</b> ${getSalesByPeriod(t,tm).toFixed(2)} ₼`; });
-    document.getElementById("monthlyReportBtn")?.addEventListener("click",()=>{ let now=new Date(); let start=new Date(now.getFullYear(),now.getMonth(),1); let end=new Date(now.getFullYear(),now.getMonth()+1,0,23,59,59); document.getElementById("reportResult").innerHTML=`<b>Aylıq satış:</b> ${getSalesByPeriod(start,end).toFixed(2)} ₼`; });
-    document.getElementById("yearlyReportBtn")?.addEventListener("click",()=>{ let now=new Date(); let start=new Date(now.getFullYear(),0,1); let end=new Date(now.getFullYear(),11,31,23,59,59); document.getElementById("reportResult").innerHTML=`<b>İllik satış:</b> ${getSalesByPeriod(start,end).toFixed(2)} ₼`; });
+    // --- Digər funksiyalar (mədaxil, satış, skaner) əvvəlki kimidir, qısaldılmış ---
+    let html5QrCodeAdd=null, html5QrCodeSell=null;
+    function stopAllScanners(){ if(html5QrCodeAdd){html5QrCodeAdd.stop().catch(()=>{});html5QrCodeAdd=null;} if(html5QrCodeSell){html5QrCodeSell.stop().catch(()=>{});html5QrCodeSell=null;} document.getElementById("scanAddArea")&&(document.getElementById("scanAddArea").style.display="none"); document.getElementById("scanSellArea")&&(document.getElementById("scanSellArea").style.display="none");}
+    async function requestCameraPermission(){ try{ const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}); s.getTracks().forEach(t=>t.stop()); return true; }catch(e){return false;} }
+    async function startScanner(elId, onSuccess, onError, errDiv){ try{ if(!await requestCameraPermission()) throw new Error("icazə yox"); const s=new Html5Qrcode(elId); const cfg={fps:15,qrbox:{width:350,height:350}}; try{ await s.start({facingMode:"environment"},cfg,onSuccess,onError); }catch(e){ await s.start({facingMode:"user"},cfg,onSuccess,onError); } return s; } catch(err){ let msg="Kamera açılmadı"; if(err.message.includes("icazə")) msg="Kamera icazəsi verilməyib"; if(errDiv) document.getElementById(errDiv).innerHTML="⚠️ "+msg; return null; } }
+    document.getElementById("startScanAddBtn")?.addEventListener("click",async()=>{ stopAllScanners(); document.getElementById("scanAddArea").style.display="block"; let sc=await startScanner("reader-add", (txt)=>{ document.getElementById("manualBarcodeAdd").value=txt; document.getElementById("findProductAddBtn").click(); if(html5QrCodeAdd){html5QrCodeAdd.stop();html5QrCodeAdd=null;} document.getElementById("scanAddArea").style.display="none"; }, ()=>{},"cameraAddError"); if(sc) html5QrCodeAdd=sc; });
+    document.getElementById("startScanSellBtn")?.addEventListener("click",async()=>{ stopAllScanners(); document.getElementById("scanSellArea").style.display="block"; let sc=await startScanner("reader-sell", (txt)=>{ document.getElementById("manualBarcodeSell").value=txt; addToCartByBarcode(txt); if(html5QrCodeSell){html5QrCodeSell.stop();html5QrCodeSell=null;} document.getElementById("scanSellArea").style.display="none"; }, ()=>{},"cameraSellError"); if(sc) html5QrCodeSell=sc; });
+    document.getElementById("stopScanAddBtn")?.addEventListener("click",()=>{ if(html5QrCodeAdd){html5QrCodeAdd.stop();html5QrCodeAdd=null;} document.getElementById("scanAddArea").style.display="none"; });
+    document.getElementById("stopScanSellBtn")?.addEventListener("click",()=>{ if(html5QrCodeSell){html5QrCodeSell.stop();html5QrCodeSell=null;} document.getElementById("scanSellArea").style.display="none"; });
+    
+    let currentAddProduct=null;
+    function findProductByBarcode(b){ return products.find(p=>p.barcode===b); }
+    document.getElementById("findProductAddBtn")?.addEventListener("click", async ()=>{ let bc=document.getElementById("manualBarcodeAdd").value.trim(); if(!bc) return; let prod=findProductByBarcode(bc); if(!prod && confirm("Yenisini yaradırsınız?")){ if(companies.length===0){ alert("Şirkət yoxdur"); return; } let name=prompt("Ad:"); let price=parseFloat(prompt("Satış qiyməti:")); if(!name || isNaN(price)) return; let compList=companies.map((c,i)=>`${i+1}. ${c.name}`).join("\n"); let idx=parseInt(prompt(`Şirkət:\n${compList}\nNömrə:`))-1; let cid=(idx>=0 && idx<companies.length)?companies[idx].id:null; if(!cid) return; prod={barcode:bc,name,price,quantity:0,companyId:cid,costPrice:0}; products.push(prod); saveAll(); renderHome(); } if(prod){ currentAddProduct=prod; document.getElementById("productInfoAdd").innerHTML=`<b>${prod.name}</b> | Stok:${prod.quantity} | Şirkət:${getCompanyName(prod.companyId)}<br>Satış qiyməti: ${prod.price} ₼`; } });
+    document.getElementById("confirmAddBtn")?.addEventListener("click",()=>{ if(!currentAddProduct) return; let qty=parseInt(document.getElementById("addQuantity").value); let cost=parseFloat(document.getElementById("addCostPrice").value); let newPrice=parseFloat(document.getElementById("addSalePrice").value); if(isNaN(qty)||qty<=0) return; if(!isNaN(newPrice) && newPrice>0) currentAddProduct.price=newPrice; currentAddProduct.quantity+=qty; currentAddProduct.costPrice=cost; let comp=companies.find(c=>c.id===currentAddProduct.companyId); if(comp) comp.totalPurchased=(comp.totalPurchased||0)+qty*cost; saveAll(); updateStats(); renderHome(); renderCompanies(); alert(`${currentAddProduct.name} - ${qty} ədəd əlavə edildi`); document.getElementById("addQuantity").value=1; document.getElementById("addCostPrice").value=""; document.getElementById("addSalePrice").value=""; currentAddProduct=null; document.getElementById("productInfoAdd").innerHTML="Məhsul seçilməyib"; });
+    
+    let cart=[];
+    function renderCart(){ let total=0; let html=cart.map((item,idx)=> { let t=item.quantity*item.price; total+=t; return `<div class="cart-item"><b>${item.name}</b> | ${item.quantity} x ${item.price}₼ = ${t}₼ <button class="danger" style="width:auto;padding:2px 8px;" onclick="removeFromCart(${idx})"><i class="fas fa-trash"></i></button></div>`; }).join(""); document.getElementById("cartItems").innerHTML=html||"Səbət boşdur"; document.getElementById("cartTotal").innerHTML=`Cəmi: ${total.toFixed(2)} ₼`; }
+    window.removeFromCart=function(idx){ cart.splice(idx,1); renderCart(); };
+    function addToCartByBarcode(bc){ let prod=findProductByBarcode(bc); if(!prod){ alert("Məhsul yoxdur"); return false; } if(prod.quantity<=0){ alert("Stokda yoxdur"); return false; } let existing=cart.find(i=>i.barcode===bc); if(existing){ if(prod.quantity<existing.quantity+1){ alert("Kifayət deyil"); return false; } existing.quantity++; } else cart.push({barcode:bc,name:prod.name,quantity:1,price:prod.price}); renderCart(); return true; }
+    document.getElementById("addToCartBtn")?.addEventListener("click",()=>{ let bc=document.getElementById("manualBarcodeSell").value.trim(); if(bc) addToCartByBarcode(bc); else alert("Barkod daxil edin"); });
+    document.getElementById("completeSaleBtn")?.addEventListener("click",()=>{ if(cart.length===0) return; let totalAmount=0, saleItems=[]; for(let item of cart){ let prod=findProductByBarcode(item.barcode); if(!prod || prod.quantity<item.quantity){ alert(`${item.name} stok yetərli deyil`); return; } totalAmount+=item.quantity*item.price; saleItems.push({barcode:item.barcode,name:item.name,quantity:item.quantity,price:item.price}); prod.quantity-=item.quantity; } sales.push({id:Date.now(),date:new Date().toISOString(),totalAmount,items:saleItems}); saveAll(); updateStats(); cart=[]; renderCart(); renderHome(); alert(`Satış tamam! Məbləğ: ${totalAmount.toFixed(2)} ₼`); updateTodaySalesDisplay(); });
+    function updateTodaySalesDisplay(){ let today=new Date(); today.setHours(0,0,0,0); let tomorrow=new Date(today); tomorrow.setDate(tomorrow.getDate()+1); let total=sales.filter(s=>{ let d=new Date(s.date); return d>=today && d<=tomorrow; }).reduce((sum,s)=>sum+s.totalAmount,0); document.getElementById("headerTodaySales").innerText=total.toFixed(2); }
+    
+    // --- Xərc əlavə ---
+    document.getElementById("addExpenseBtn")?.addEventListener("click",()=>{ let name=document.getElementById("expenseName").value.trim(); let cat=document.getElementById("expenseCategory").value; let amt=parseFloat(document.getElementById("expenseAmount").value); let date=document.getElementById("expenseDate").value; if(!name || isNaN(amt) || !date) return alert("Doldurun"); expenses.push({id:Date.now(),name,category:cat,amount:amt,date}); saveAll(); renderExpenses(); document.getElementById("expenseName").value=""; document.getElementById("expenseAmount").value=""; document.getElementById("expenseDate").value=""; });
+    
+    // --- Əməkdaş əlavə ---
+    document.getElementById("addEmployeeBtn")?.addEventListener("click",()=>{ let name=document.getElementById("empName").value.trim(); let birthday=document.getElementById("empBirthday").value; let hireDate=document.getElementById("empHireDate").value; let salary=parseFloat(document.getElementById("empSalary").value); if(!name || !birthday || !hireDate || isNaN(salary)) return alert("Bütün xanaları doldurun"); let photo=""; let file=document.getElementById("empPhoto").files[0]; if(file){ let reader=new FileReader(); reader.onload=function(e){ photo=e.target.result; employees.push({id:Date.now(),name,birthday,hireDate,salary,photo}); saveAll(); renderEmployees(); }; reader.readAsDataURL(file); } else { employees.push({id:Date.now(),name,birthday,hireDate,salary,photo}); saveAll(); renderEmployees(); } });
+    document.getElementById("recordSalaryBtn")?.addEventListener("click",()=>{ let empId=parseInt(document.getElementById("salaryEmployeeSelect").value); let amt=parseFloat(document.getElementById("salaryPaidAmount").value); let date=document.getElementById("salaryPaidDate").value; if(!empId || isNaN(amt) || !date) return alert("Doldurun"); salaryPayments.push({id:Date.now(),employeeId:empId,amount:amt,date}); saveAll(); renderEmployees(); alert("Maaş qeyd edildi"); });
+    
+    // --- Event listeners ---
+    document.getElementById("downloadSalaryTableBtn")?.addEventListener("click",downloadSalaryTableImage);
+    document.getElementById("generateMonthlyReportBtn")?.addEventListener("click",generateMonthlyReport);
+    document.getElementById("generateYearlyReportBtn")?.addEventListener("click",generateYearlyReport);
+    document.getElementById("downloadReportImageBtn")?.addEventListener("click",downloadReportImage);
+    document.getElementById("downloadCompanyReportImageBtn")?.addEventListener("click",downloadCompanyReportImage);
+    document.getElementById("closeCompanyReportModalBtn")?.addEventListener("click",()=>document.getElementById("companyReportModal").style.display="none");
+    document.getElementById("doSearchBtn")?.addEventListener("click",globalSearch);
+    document.getElementById("addCompanyBtn")?.addEventListener("click",()=>{ let n=document.getElementById("companyName").value.trim(); let p=document.getElementById("companyPhone").value.trim(); if(!n) return; companies.push({id:Date.now(),name:n,phone:p,totalPurchased:0,totalPaid:0,balance:0,totalSales:0,stockValue:0}); saveAll(); renderCompanies(); renderHome(); });
+    document.getElementById("makePaymentBtn")?.addEventListener("click",()=>{ let cid=parseInt(document.getElementById("paymentCompanySelect").value); let amt=parseFloat(document.getElementById("paymentAmount").value); if(!cid||isNaN(amt)) return; let comp=companies.find(c=>c.id===cid); if(comp){ comp.totalPaid=(comp.totalPaid||0)+amt; comp.balance=(comp.totalPurchased||0)-comp.totalPaid; saveAll(); updateStats(); renderCompanies(); renderHome(); alert(`Ödəniş edildi. Borc: ${comp.balance.toFixed(2)}`); } });
+    
     // Tab keçid
     let btns=document.querySelectorAll(".tab-btn"), contents=document.querySelectorAll(".tab-content");
-    btns.forEach(btn=>{ btn.addEventListener("click",()=>{ let tabId=btn.getAttribute("data-tab"); btns.forEach(b=>b.classList.remove("active")); btn.classList.add("active"); contents.forEach(c=>c.classList.remove("active")); document.getElementById(tabId).classList.add("active"); if(tabId==="home") updateTodaySalesDisplay(); if(tabId==="companies") renderCompanyLists(); stopAllScanners(); }); });
-    // İlkin yükləmə
-    loadData(); renderHomeProducts(); renderCompanyLists(); updateTodaySalesDisplay(); checkLowStock();
-    setInterval(()=>{ checkLowStock(); updateTodaySalesDisplay(); }, 60000);
+    btns.forEach(btn=>{ btn.addEventListener("click",()=>{ let id=btn.dataset.tab; btns.forEach(b=>b.classList.remove("active")); btn.classList.add("active"); contents.forEach(c=>c.classList.remove("active")); document.getElementById(id).classList.add("active"); if(id==="home"){ renderHome(); updateTodaySalesDisplay(); } if(id==="companies") renderCompanies(); if(id==="expenses") renderExpenses(); if(id==="employees") renderEmployees(); stopAllScanners(); }); });
+    
+    loadData(); renderHome(); renderCompanies(); renderExpenses(); renderEmployees(); updateTodaySalesDisplay(); checkBirthdayAlerts(); setInterval(()=>{ updateTodaySalesDisplay(); checkBirthdayAlerts(); }, 60000);
 </script>
 </body>
 </html>
