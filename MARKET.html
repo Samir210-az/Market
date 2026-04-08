@@ -47,6 +47,7 @@
         .btn-small { width: auto; padding: 6px 12px; font-size: 12px; display: inline-block; margin: 5px; }
         .flex-btns { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
         .employee-photo { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; background: #2c3e50; }
+        .employee-photo-large { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 10px; }
         .search-results { max-height: 400px; overflow-y: auto; }
         .warning-birthday { background: #e67e22; color: #1e2a3a; padding: 5px 10px; border-radius: 20px; font-weight: bold; }
         @media (max-width: 600px) { .tab-btn { font-size: 10px; } }
@@ -88,7 +89,7 @@
 <div id="expenses" class="tab-content"><div class="card"><h3>➕ Yeni xərc</h3><input type="text" id="expenseName" placeholder="Xərc adı (vergi, kommunal, icarə, maaş, digər)"><select id="expenseCategory"><option value="Vergi">Vergi</option><option value="Kommunal">Kommunal</option><option value="İcarə">İcarə</option><option value="Əmək haqqı">Əmək haqqı</option><option value="Digər">Digər</option></select><input type="number" id="expenseAmount" placeholder="Məbləğ (₼)" step="0.01"><input type="date" id="expenseDate"><button id="addExpenseBtn" class="btn success">Əlavə et</button></div><div class="card"><h3>📋 Xərclər siyahısı</h3><div id="expensesList"></div></div></div>
 
 <!-- ƏMƏKDAŞLAR -->
-<div id="employees" class="tab-content"><div class="card"><h3>➕ Yeni əməkdaş</h3><input type="text" id="empName" placeholder="Ad Soyad"><input type="date" id="empBirthday"><input type="date" id="empHireDate"><input type="number" id="empSalary" placeholder="Aylıq maaş (₼)" step="0.01"><input type="file" id="empPhoto" accept="image/*"><button id="addEmployeeBtn" class="btn success">Əlavə et</button></div><div class="card"><h3>📋 Əməkdaşlar</h3><div id="employeesList"></div></div><div class="card"><h3>💰 Maaş ödənişi</h3><select id="salaryEmployeeSelect"></select><input type="number" id="salaryPaidAmount" placeholder="Ödənilən məbləğ (₼)"><input type="date" id="salaryPaidDate"><button id="recordSalaryBtn" class="btn">Maaşı qeyd et</button></div><div class="card"><h3>📊 Maaş cədvəli (şəkil çıxar)</h3><button id="downloadSalaryTableBtn" class="btn secondary">Maaş cədvəlini şəkil yüklə</button><div id="salaryTableView"></div></div></div>
+<div id="employees" class="tab-content"><div class="card"><h3>➕ Yeni əməkdaş</h3><input type="text" id="empName" placeholder="Ad Soyad"><input type="date" id="empBirthday"><input type="date" id="empHireDate"><input type="number" id="empSalary" placeholder="Aylıq maaş (₼)" step="0.01"><input type="file" id="empPhoto" accept="image/*"><button id="addEmployeeBtn" class="btn success">Əlavə et</button></div><div class="card"><h3>📋 Əməkdaşlar (adına toxunun)</h3><div id="employeesList"></div></div><div class="card"><h3>💰 Maaş ödənişi</h3><select id="salaryEmployeeSelect"></select><input type="number" id="salaryPaidAmount" placeholder="Ödənilən məbləğ (₼)"><input type="date" id="salaryPaidDate"><button id="recordSalaryBtn" class="btn">Maaşı qeyd et</button></div><div class="card"><h3>📊 Maaş cədvəli (şəkil çıxar)</h3><button id="downloadSalaryTableBtn" class="btn secondary">Maaş cədvəlini şəkil yüklə</button><div id="salaryTableView"></div></div></div>
 
 <!-- HESABATLAR -->
 <div id="reports" class="tab-content"><div class="card"><h3>📊 Dövriyyə hesabatları</h3><div class="flex-row"><select id="reportMonth"><option value="0">Yanvar</option><option value="1">Fevral</option><option value="2">Mart</option><option value="3">Aprel</option><option value="4">May</option><option value="5">İyun</option><option value="6">İyul</option><option value="7">Avqust</option><option value="8">Sentyabr</option><option value="9">Oktyabr</option><option value="10">Noyabr</option><option value="11">Dekabr</option></select><input type="number" id="reportYear" placeholder="İl" value="2025"></div><button id="generateMonthlyReportBtn" class="btn">Aylıq hesabat</button><button id="generateYearlyReportBtn" class="btn">İllik hesabat</button><div id="reportResult" style="margin-top:15px; background:#0f1a24; padding:12px; border-radius:14px;"></div><button id="downloadReportImageBtn" class="btn secondary">Hesabatı şəkil yüklə</button></div></div>
@@ -98,9 +99,20 @@
 
 <footer><i class="fas fa-shield-alt"></i> Security group tərəfindən yaradılmışdır və bütün haqları qorunur.</footer>
 
-<!-- Modallar (şirkət hesabatı, şəkil çıxarma) -->
+<!-- Modallar -->
 <div id="companyReportModal" class="modal"><div class="modal-content" id="companyReportContent"><h3 id="modalCompanyName">Şirkət</h3><div id="reportContainer"></div><div class="flex-btns"><button id="downloadCompanyReportImageBtn" class="btn success btn-small">Şəkil yüklə</button><button id="closeCompanyReportModalBtn" class="btn danger btn-small">Bağla</button></div></div></div>
 <div id="newProductModal" class="modal"><div class="modal-content"><h3>Yeni məhsul</h3><input id="newProductName" placeholder="Ad"><input id="newProductPrice" placeholder="Satış qiyməti"><select id="newProductCompany"></select><button id="confirmNewProductBtn" class="btn success">Yarat</button><button id="cancelNewProductBtn" class="btn danger">Ləğv et</button></div></div>
+
+<!-- YENİ MODAL: ƏMƏKDAŞ MƏLUMATLARI -->
+<div id="employeeDetailsModal" class="modal">
+    <div class="modal-content" id="employeeDetailsContent">
+        <div id="employeeDetailsInfo"></div>
+        <div class="flex-btns">
+            <button id="downloadEmployeeImageBtn" class="btn success btn-small">Şəkil yüklə</button>
+            <button id="closeEmployeeModalBtn" class="btn danger btn-small">Bağla</button>
+        </div>
+    </div>
+</div>
 
 <script>
     // ------------------ DATA MODELS ------------------
@@ -158,7 +170,7 @@
     }
     function renderEmployees() {
         let container = document.getElementById("employeesList");
-        if(container) container.innerHTML = employees.map(emp=>`<div class="employee-item"><b>${emp.name}</b> | Maaş: ${emp.salary} ₼ | Doğum: ${emp.birthday} | İşə başlama: ${emp.hireDate}<br>${emp.photo ? `<img src="${emp.photo}" class="employee-photo">` : ""}<button class="btn-small danger" onclick="deleteEmployee(${emp.id})">Sil</button></div>`).join("") || "Əməkdaş yoxdur";
+        if(container) container.innerHTML = employees.map(emp=>`<div class="employee-item" onclick="showEmployeeDetails(${emp.id})"><b>${emp.name}</b> | Maaş: ${emp.salary} ₼ | Doğum: ${emp.birthday} | İşə başlama: ${emp.hireDate}<br>${emp.photo ? `<img src="${emp.photo}" class="employee-photo">` : ""}<button class="btn-small danger" style="float:right;" onclick="event.stopPropagation(); deleteEmployee(${emp.id})">Sil</button></div>`).join("") || "Əməkdaş yoxdur";
         let selectEmp = document.getElementById("salaryEmployeeSelect");
         if(selectEmp) selectEmp.innerHTML = '<option value="">Seçin</option>'+employees.map(e=>`<option value="${e.id}">${e.name} (${e.salary} ₼)</option>`).join("");
         renderSalaryTable();
@@ -186,38 +198,93 @@
         if(alertDiv) alertDiv.innerHTML = alerts.length ? `<div class="warning-birthday">🎂 ${alerts.join(" | ")}</div>` : "Yaxın doğum günü yoxdur";
     }
     
-    // --- Xərc silmə ---
     window.deleteExpense = function(id) { expenses = expenses.filter(e=>e.id!==id); saveAll(); renderExpenses(); };
     window.deleteEmployee = function(id) { employees = employees.filter(e=>e.id!==id); salaryPayments = salaryPayments.filter(sp=>sp.employeeId!==id); saveAll(); renderEmployees(); };
+    
+    // --- Əməkdaş detalları modalı ---
+    window.showEmployeeDetails = function(empId) {
+        let emp = employees.find(e=>e.id===empId);
+        if(!emp) return;
+        let payments = salaryPayments.filter(sp=>sp.employeeId===empId).sort((a,b)=>new Date(b.date)-new Date(a.date));
+        let paymentsHtml = "<h4>Maaş ödəniş tarixçəsi:</h4><ul>";
+        payments.forEach(p => { paymentsHtml += `<li>${p.date} - ${p.amount} ₼</li>`; });
+        paymentsHtml += payments.length ? "</ul>" : "<p>Heç bir ödəniş qeyd edilməyib</p>";
+        
+        let detailsHtml = `
+            ${emp.photo ? `<img src="${emp.photo}" class="employee-photo-large">` : `<div style="width:100px;height:100px;background:#2c3e50;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;"><i class="fas fa-user fa-3x"></i></div>`}
+            <table class="report-table">
+                <tr><th>Ad Soyad</th><td>${emp.name}</td></tr>
+                <tr><th>Doğum tarixi</th><td>${emp.birthday}</td></tr>
+                <tr><th>İşə qəbul tarixi</th><td>${emp.hireDate}</td></tr>
+                <tr><th>Aylıq maaş</th><td>${emp.salary} ₼</td></tr>
+            </table>
+            ${paymentsHtml}
+        `;
+        document.getElementById("employeeDetailsInfo").innerHTML = detailsHtml;
+        document.getElementById("employeeDetailsModal").style.display = "flex";
+        // Şəkil yükləmə düyməsi üçün event listener (bir dəfə)
+        let downloadBtn = document.getElementById("downloadEmployeeImageBtn");
+        let oldHandler = downloadBtn.onclick;
+        downloadBtn.onclick = async () => {
+            let content = document.getElementById("employeeDetailsContent").cloneNode(true);
+            let btns = content.querySelector(".flex-btns");
+            if(btns) btns.remove();
+            content.style.padding = "20px"; content.style.background = "#1e2a3a";
+            document.body.appendChild(content);
+            try {
+                let canvas = await html2canvas(content, {scale:2});
+                let link = document.createElement("a");
+                link.download = `employee_${emp.name}_${Date.now()}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+            } catch(e) { alert("Şəkil yaratmaq alınmadı: "+e); }
+            finally { document.body.removeChild(content); }
+        };
+    };
+    document.getElementById("closeEmployeeModalBtn")?.addEventListener("click", () => {
+        document.getElementById("employeeDetailsModal").style.display = "none";
+    });
     
     // --- Axtarış ---
     function globalSearch() {
         let term = document.getElementById("globalSearch").value.toLowerCase();
         let results = [];
-        // Məhsul axtarışı
         products.forEach(p => {
             if(p.name.toLowerCase().includes(term) || p.barcode.includes(term)) {
                 let company = companies.find(c=>c.id===p.companyId);
-                let lastReceipt = "Tarix yoxdur"; // sadəlik üçün son mədaxil tarixi saxlanmır, amma əlavə edilə bilər
-                results.push(`<div class="product-item">📦 MAL: ${p.name} | Barkod: ${p.barcode} | Stok: ${p.quantity} | Alış: ${p.costPrice}₼ | Satış: ${p.price}₼ | Şirkət: ${company?.name} | Son qəbul: ${lastReceipt}</div>`);
+                results.push(`<div class="product-item">📦 MAL: ${p.name} | Barkod: ${p.barcode} | Stok: ${p.quantity} | Alış: ${p.costPrice}₼ | Satış: ${p.price}₼ | Şirkət: ${company?.name}</div>`);
             }
         });
-        // Şirkət axtarışı
         companies.forEach(c => {
             if(c.name.toLowerCase().includes(term)) results.push(`<div class="company-item">🏢 ŞİRKƏT: ${c.name} | Borc: ${c.balance}₼ | Telefon: ${c.phone||'-'}</div>`);
         });
-        // Xərc axtarışı
         expenses.forEach(e => {
             if(e.name.toLowerCase().includes(term)) results.push(`<div class="expense-item">💰 XƏRC: ${e.name} (${e.category}) | ${e.amount}₼ | Tarix: ${e.date}</div>`);
         });
         document.getElementById("searchResults").innerHTML = results.length ? results.join("") : "Nəticə tapılmadı";
     }
     
-    // --- Hesabatlar (gəlir-xərc) ---
+    // --- Hesabatlar (düzgün gəlir hesablaması) ---
     function getMonthlyRevenue(year, month) {
         let start = new Date(year, month, 1);
         let end = new Date(year, month+1, 0, 23,59,59);
         return sales.filter(s=>{ let d=new Date(s.date); return d>=start && d<=end; }).reduce((sum,s)=>sum+s.totalAmount,0);
+    }
+    function getMonthlyGrossProfit(year, month) {
+        let start = new Date(year, month, 1);
+        let end = new Date(year, month+1, 0, 23,59,59);
+        let profit = 0;
+        sales.forEach(sale => {
+            let d = new Date(sale.date);
+            if(d >= start && d <= end) {
+                sale.items.forEach(item => {
+                    let product = products.find(p => p.barcode === item.barcode);
+                    let cost = product ? (product.costPrice || 0) : 0;
+                    profit += item.quantity * (item.price - cost);
+                });
+            }
+        });
+        return profit;
     }
     function getMonthlyExpenses(year, month) {
         let start = new Date(year, month, 1);
@@ -228,16 +295,45 @@
         let year = parseInt(document.getElementById("reportYear").value);
         let month = parseInt(document.getElementById("reportMonth").value);
         let revenue = getMonthlyRevenue(year, month);
+        let grossProfit = getMonthlyGrossProfit(year, month);
         let expense = getMonthlyExpenses(year, month);
-        let profit = revenue - expense;
-        document.getElementById("reportResult").innerHTML = `<div id="reportPrintable"><h3>${year}-ci il ${month+1}-ci ay hesabatı</h3><table class="report-table"><tr><th>Gəlir (satış)</th><td>${revenue.toFixed(2)} ₼</td></tr><tr><th>Xərclər</th><td>${expense.toFixed(2)} ₼</td></tr><tr><th>Xalis gəlir</th><td class="${profit>=0?'paid-green':'debt-red'}">${profit.toFixed(2)} ₼</td></tr></table></div>`;
+        let netProfit = grossProfit - expense;
+        document.getElementById("reportResult").innerHTML = `<div id="reportPrintable"><h3>${year}-ci il ${month+1}-ci ay hesabatı</h3>
+        <table class="report-table">
+            <tr><th>Ümumi satış (Revenue)</th><td>${revenue.toFixed(2)} ₼</td></tr>
+            <tr><th>Gəlir (Satış - Alış)</th><td class="paid-green">${grossProfit.toFixed(2)} ₼</td></tr>
+            <tr><th>Xərclər (Expenses)</th><td>${expense.toFixed(2)} ₼</td></tr>
+            <tr><th>Xalis gəlir (Net Profit)</th><td class="${netProfit>=0?'paid-green':'debt-red'}">${netProfit.toFixed(2)} ₼</td></tr>
+        </table></div>`;
+    }
+    function getYearlyRevenue(year) {
+        let total = 0;
+        for(let m=0;m<12;m++) total += getMonthlyRevenue(year, m);
+        return total;
+    }
+    function getYearlyGrossProfit(year) {
+        let total = 0;
+        for(let m=0;m<12;m++) total += getMonthlyGrossProfit(year, m);
+        return total;
+    }
+    function getYearlyExpenses(year) {
+        let total = 0;
+        for(let m=0;m<12;m++) total += getMonthlyExpenses(year, m);
+        return total;
     }
     function generateYearlyReport() {
         let year = parseInt(document.getElementById("reportYear").value);
-        let revenue = 0, expense = 0;
-        for(let m=0;m<12;m++) { revenue += getMonthlyRevenue(year,m); expense += getMonthlyExpenses(year,m); }
-        let profit = revenue - expense;
-        document.getElementById("reportResult").innerHTML = `<div id="reportPrintable"><h3>${year}-ci il illik hesabat</h3><table class="report-table"><tr><th>Ümumi gəlir</th><td>${revenue.toFixed(2)} ₼</td></tr><tr><th>Ümumi xərclər</th><td>${expense.toFixed(2)} ₼</td></tr><tr><th>Xalis gəlir</th><td class="${profit>=0?'paid-green':'debt-red'}">${profit.toFixed(2)} ₼</td></tr></table></div>`;
+        let revenue = getYearlyRevenue(year);
+        let grossProfit = getYearlyGrossProfit(year);
+        let expense = getYearlyExpenses(year);
+        let netProfit = grossProfit - expense;
+        document.getElementById("reportResult").innerHTML = `<div id="reportPrintable"><h3>${year}-ci il illik hesabat</h3>
+        <table class="report-table">
+            <tr><th>Ümumi satış (Revenue)</th><td>${revenue.toFixed(2)} ₼</td></tr>
+            <tr><th>Gəlir (Satış - Alış)</th><td class="paid-green">${grossProfit.toFixed(2)} ₼</td></tr>
+            <tr><th>Xərclər (Expenses)</th><td>${expense.toFixed(2)} ₼</td></tr>
+            <tr><th>Xalis gəlir (Net Profit)</th><td class="${netProfit>=0?'paid-green':'debt-red'}">${netProfit.toFixed(2)} ₼</td></tr>
+        </table></div>`;
     }
     async function downloadReportImage() {
         let element = document.getElementById("reportPrintable");
@@ -255,7 +351,7 @@
         finally { document.body.removeChild(clone); }
     }
     
-    // --- Şirkət hesabatı şəkil ---
+    // --- Şirkət hesabatı şəkil (əvvəlki kimi) ---
     window.showCompanyReport = function(companyId) {
         let company = companies.find(c=>c.id===companyId);
         let compProducts = products.filter(p=>p.companyId===companyId);
@@ -283,7 +379,6 @@
         finally { document.body.removeChild(content); }
     }
     
-    // --- Maaş cədvəli şəkil ---
     async function downloadSalaryTableImage() {
         let tableDiv = document.getElementById("salaryTableView").cloneNode(true);
         tableDiv.style.background = "#1e2a3a"; tableDiv.style.padding = "20px"; tableDiv.style.borderRadius = "16px";
@@ -298,7 +393,7 @@
         finally { document.body.removeChild(tableDiv); }
     }
     
-    // --- Digər funksiyalar (mədaxil, satış, skaner) əvvəlki kimidir, qısaldılmış ---
+    // --- Kamera skaner (əvvəlki kimi) ---
     let html5QrCodeAdd=null, html5QrCodeSell=null;
     function stopAllScanners(){ if(html5QrCodeAdd){html5QrCodeAdd.stop().catch(()=>{});html5QrCodeAdd=null;} if(html5QrCodeSell){html5QrCodeSell.stop().catch(()=>{});html5QrCodeSell=null;} document.getElementById("scanAddArea")&&(document.getElementById("scanAddArea").style.display="none"); document.getElementById("scanSellArea")&&(document.getElementById("scanSellArea").style.display="none");}
     async function requestCameraPermission(){ try{ const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}); s.getTracks().forEach(t=>t.stop()); return true; }catch(e){return false;} }
