@@ -434,5 +434,19 @@
     
     loadData(); renderHome(); renderCompanies(); renderExpenses(); renderEmployees(); updateTodaySalesDisplay(); checkBirthdayAlerts(); setInterval(()=>{ updateTodaySalesDisplay(); checkBirthdayAlerts(); }, 60000);
 </script>
+    <div style="position:fixed; bottom:60px; right:10px; z-index:100;">
+    <button id="resetAllDataBtn" class="btn danger" style="width:auto; padding:8px 16px; background:#e74c3c; color:white;">
+        🗑️ Bütün məlumatları sıfırla
+    </button>
+</div>
+<script>
+    document.getElementById("resetAllDataBtn")?.addEventListener("click", () => {
+        if(confirm("Bütün məlumatlar (mallar, satışlar, şirkətlər, xərclər, əməkdaşlar) silinəcək. Davam edirsiniz?")) {
+            localStorage.clear();
+            alert("Proqram sıfırlandı. Səhifə yenilənir...");
+            location.reload();
+        }
+    });
+</script>
 </body>
 </html>
