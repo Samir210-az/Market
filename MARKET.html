@@ -15,6 +15,7 @@
         .logo-icon { width: 36px; height: 36px; background: #ffc107; color: #1e2a3a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
         .logo-text { font-weight: bold; font-size: 12px; color: #ffc107; }
         .daily-sales-header { background: #0f1a24; padding: 6px 15px; border-radius: 40px; font-size: 1.2rem; font-weight: bold; color: #ffc107; }
+        .daily-sales-header span { font-size: 1rem; }
         .tab-bar { display: flex; background: #0f1a24; position: sticky; top: 70px; z-index: 99; flex-wrap: wrap; }
         .tab-btn { flex: 1; text-align: center; padding: 10px 5px; background: #1e2a3a; color: #ccc; border: none; font-size: 12px; cursor: pointer; border-bottom: 3px solid transparent; }
         .tab-btn.active { background: #2c3e50; color: #ffc107; border-bottom-color: #ffc107; }
@@ -26,7 +27,7 @@
         button.success { background: #27ae60; color: white; }
         input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 12px; background: #2c3e50; color: white; border: 1px solid #444; }
         .flex-row { display: flex; gap: 10px; flex-wrap: wrap; }
-        .product-item, .company-item, .cart-item { background: #0f1a24; padding: 12px; border-radius: 14px; margin-bottom: 8px; border-left: 5px solid #ffc107; }
+        .product-item, .company-item, .cart-item { background: #0f1a24; padding: 12px; border-radius: 14px; margin-bottom: 8px; border-left: 5px solid #ffc107; cursor: pointer; }
         .company-item { cursor: pointer; transition: 0.2s; }
         .company-item:hover { background: #2c3e50; }
         .debt-red { color: #ff5555; font-weight: bold; font-size: 1.2rem; }
@@ -36,16 +37,16 @@
         .total-cart { text-align: right; font-size: 1.2rem; color: #ffc107; }
         .scanner-area { background: #0a121c; padding: 10px; border-radius: 16px; margin-bottom: 15px; }
         #reader-add, #reader-sell { width: 100%; max-width: 500px; margin: 0 auto; background: black; border-radius: 12px; min-height: 350px; }
-        footer { text-align: center; padding: 15px; font-size: 11px; background: #0f1a24; position: fixed; bottom: 0; width: 100%; z-index: 100; }
+        footer { text-align: center; padding: 15px; font-size: 11px; background: #0f1a24; position: fixed; bottom: 0; width: 100%; }
         .error-msg { background: #e74c3c; padding: 8px; border-radius: 10px; margin: 10px 0; text-align: center; }
         .info-msg { background: #2980b9; padding: 8px; border-radius: 10px; margin: 10px 0; text-align: center; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 200; justify-content: center; align-items: center; overflow-y: auto; }
         .modal-content { background: #1e2a3a; padding: 20px; border-radius: 20px; width: 95%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
-        .company-products-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .company-products-table th, .company-products-table td { border-bottom: 1px solid #2c3e50; padding: 8px; text-align: left; }
-        .company-products-table th { background: #0f1a24; color: #ffc107; }
-        .download-img-btn { background: #27ae60; margin-top: 15px; }
-        hr { border-color: #2c3e50; }
+        .report-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        .report-table th, .report-table td { border: 1px solid #444; padding: 8px; text-align: left; }
+        .report-table th { background: #2c3e50; color: #ffc107; }
+        .btn-small { width: auto; padding: 6px 12px; font-size: 12px; display: inline-block; margin: 5px; }
+        .flex-btns { display: flex; gap: 10px; justify-content: flex-end; }
     </style>
 </head>
 <body>
@@ -68,7 +69,7 @@
 
 <div id="home" class="tab-content active">
     <div class="card">
-        <h3>📦 Anbarda qalan mallar</h3>
+        <h3>📦 Anbarda qalan mallar (stok ≤5 xəbərdarlıq)</h3>
         <div id="productListHome"></div>
         <input type="text" id="searchProductHome" placeholder="Axtar (ad/barkod)" onkeyup="filterProductsHome()">
         <div id="searchResultsHome"></div>
@@ -111,7 +112,7 @@
 
 <div id="companies" class="tab-content">
     <div class="card"><h3>➕ Yeni şirkət</h3><input id="companyName" placeholder="Ad"><input id="companyPhone" placeholder="Telefon"><button id="addCompanyBtn" class="btn success">Əlavə et</button></div>
-    <div class="card"><h3>📋 Şirkətlər və maliyyə</h3><div id="companyList"></div></div>
+    <div class="card"><h3>📋 Şirkətlər (adına toxunun)</h3><div id="companyList"></div></div>
     <div class="card"><h3>💰 Şirkətə ödəniş</h3><select id="paymentCompanySelect"></select><input type="number" id="paymentAmount" placeholder="Məbləğ (₼)"><button id="makePaymentBtn" class="btn">Ödəniş et</button></div>
 </div>
 
@@ -121,13 +122,15 @@
 
 <footer><i class="fas fa-shield-alt"></i> Security group tərəfindən yaradılmışdır və bütün haqları qorunur.</footer>
 
-<!-- Modal for company products -->
-<div id="companyProductsModal" class="modal">
-    <div class="modal-content" id="companyProductsContent">
-        <h3 id="modalCompanyName">Şirkət malları</h3>
-        <div id="companyProductsList"></div>
-        <button id="downloadProductsImage" class="btn download-img-btn"><i class="fas fa-download"></i> Şəkil yüklə (PNG)</button>
-        <button id="closeModalBtn" class="btn danger">Bağla</button>
+<!-- Modal for company products report -->
+<div id="companyReportModal" class="modal">
+    <div class="modal-content" id="companyReportContent">
+        <h3 id="modalCompanyName">Şirkət adı</h3>
+        <div id="reportContainer"></div>
+        <div class="flex-btns">
+            <button id="downloadReportImageBtn" class="btn success btn-small"><i class="fas fa-camera"></i> Şəkil yüklə (PNG)</button>
+            <button id="closeReportModalBtn" class="btn danger btn-small">Bağla</button>
+        </div>
     </div>
 </div>
 
@@ -182,8 +185,9 @@
 
     function getCompanyName(id) { let c = companies.find(c=>c.id==id); return c ? c.name : "Naməlum"; }
     
-    // Xəbərdarlıq mesajını ləğv etdik (yalnız vizual göstəriş)
+    // Xəbərdarlıq mesajı tamamilə ləğv edildi - yalnız vizual işarə
     function checkLowStock() {
+        // Heç bir popup mesajı çıxmır
         renderHomeProducts();
     }
     
@@ -208,19 +212,18 @@
         // Şirkətlər səhifəsi
         let container = document.getElementById("companyList");
         if(container) {
-            let html = companies.map(c=>`<div class="company-item" onclick="showCompanyProductsModal(${c.id})"><b>${c.name}</b> (Tel: ${c.phone||'-'})<br>
+            let html = companies.map(c=>`<div class="company-item" onclick="showCompanyReport(${c.id})"><b>${c.name}</b> (Tel: ${c.phone||'-'})<br>
                 <span class="total-purchased-blue">📦 Ümumi alış: ${(c.totalPurchased||0).toFixed(2)} ₼</span><br>
                 <span class="paid-green">✅ Ödənilən: ${(c.totalPaid||0).toFixed(2)} ₼</span><br>
                 <span class="debt-red">💳 Cari borc: ${(c.balance||0).toFixed(2)} ₼</span><br>
                 <span>📈 Ümumi satış: ${(c.totalSales||0).toFixed(2)} ₼</span><br>
-                <span>📦 Anbar dəyəri: ${(c.stockValue||0).toFixed(2)} ₼</span><br>
-                <button class="btn warning" onclick="event.stopPropagation(); showCompanyProductsModal(${c.id})">Mallar</button></div>`).join("");
+                <span>📦 Anbar dəyəri (alışla): ${(c.stockValue||0).toFixed(2)} ₼</span></div>`).join("");
             container.innerHTML = html || "Şirkət yoxdur";
         }
-        // Ana səhifə şirkət siyahısı (klik açır)
+        // Ana səhifə şirkət siyahısı (kliklənə bilən)
         let homeContainer = document.getElementById("companyListHome");
         if(homeContainer) {
-            let html = companies.map(c=>`<div class="company-item" onclick="showCompanyProductsModal(${c.id})"><b>${c.name}</b> | Borc: <span class="debt-red">${(c.balance||0).toFixed(2)} ₼</span> | Satış: ${(c.totalSales||0).toFixed(2)} ₼ | Anbar: ${(c.stockValue||0).toFixed(2)} ₼</div>`).join("");
+            let html = companies.map(c=>`<div class="company-item" onclick="showCompanyReport(${c.id})"><b>${c.name}</b> | Borc: <span class="debt-red">${(c.balance||0).toFixed(2)} ₼</span> | Satış: ${(c.totalSales||0).toFixed(2)} ₼ | Anbar dəyəri: ${(c.stockValue||0).toFixed(2)} ₼</div>`).join("");
             homeContainer.innerHTML = html || "Şirkət yoxdur";
         }
         // ödəniş select
@@ -228,53 +231,63 @@
         if(select) { select.innerHTML = '<option value="">Seçin</option>'+companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join(""); }
     }
     
-    // Modalda şirkət mallarını göstər və şəkil yükləmə imkanı
-    window.showCompanyProductsModal = function(companyId) {
-        let comp = companies.find(c=>c.id==companyId);
-        if(!comp) return;
-        let compProducts = products.filter(p => p.companyId == companyId);
-        let modal = document.getElementById("companyProductsModal");
-        let contentDiv = document.getElementById("companyProductsList");
-        let title = document.getElementById("modalCompanyName");
-        title.innerHTML = `${comp.name} - Malların siyahısı`;
+    // Şirkət hesabatını göstər (modal)
+    window.showCompanyReport = function(companyId) {
+        const company = companies.find(c => c.id === companyId);
+        if(!company) return;
+        const compProducts = products.filter(p => p.companyId === companyId);
+        const stockTotal = compProducts.reduce((sum, p) => sum + (p.quantity * (p.costPrice || 0)), 0);
         
-        let tableHtml = `<table class="company-products-table">
-            <thead><tr><th>Məhsul adı</th><th>Barkod</th><th>Say</th><th>Alış qiyməti</th><th>Satış qiyməti</th><th>Qalıq dəyəri (alışla)</th></tr></thead><tbody>`;
-        let totalStockValue = 0;
+        let tableHtml = `<table class="report-table">
+            <thead><tr><th>Məhsul adı</th><th>Barkod</th><th>Say</th><th>Alış qiyməti</th><th>Satış qiyməti</th><th>Qalıq dəyəri (alış)</th></tr></thead><tbody>`;
         compProducts.forEach(p => {
-            let stockVal = p.quantity * (p.costPrice || 0);
-            totalStockValue += stockVal;
             tableHtml += `<tr>
                 <td>${p.name}</td>
                 <td>${p.barcode}</td>
                 <td>${p.quantity}</td>
-                <td>${(p.costPrice||0).toFixed(2)} ₼</td>
+                <td>${(p.costPrice || 0).toFixed(2)} ₼</td>
                 <td>${p.price.toFixed(2)} ₼</td>
-                <td>${stockVal.toFixed(2)} ₼</td>
+                <td>${((p.costPrice || 0) * p.quantity).toFixed(2)} ₼</td>
             </tr>`;
         });
+        if(compProducts.length === 0) tableHtml += `<tr><td colspan="6">Bu şirkətə aid heç bir məhsul yoxdur</td></tr>`;
         tableHtml += `</tbody></table>`;
-        let summaryHtml = `<hr><div style="margin-top:10px;"><strong>📊 Xülasə:</strong><br>
-            💳 Cari borc: <span class="debt-red">${comp.balance.toFixed(2)} ₼</span><br>
-            📦 Anbarda qalan malların alış dəyəri cəmi: <strong>${totalStockValue.toFixed(2)} ₼</strong>
-            </div>`;
-        contentDiv.innerHTML = tableHtml + summaryHtml;
-        modal.style.display = "flex";
         
-        // Şəkil yükləmə düyməsi
-        document.getElementById("downloadProductsImage").onclick = () => {
-            const element = document.getElementById("companyProductsContent");
-            html2canvas(element, { scale: 2, backgroundColor: '#1e2a3a' }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `${comp.name}_mallar.png`;
-                link.href = canvas.toDataURL();
-                link.click();
-            }).catch(err => alert("Şəkil yaradılmadı: " + err));
-        };
+        const summaryHtml = `<div style="margin-top:15px; padding:10px; background:#0f1a24; border-radius:12px;">
+            <strong>📌 Xülasə:</strong><br>
+            💳 Cari borc: <span class="debt-red">${company.balance.toFixed(2)} ₼</span><br>
+            📦 Anbarda qalan malların alış dəyəri cəmi: <strong>${stockTotal.toFixed(2)} ₼</strong>
+        </div>`;
+        
+        document.getElementById("modalCompanyName").innerHTML = `${company.name} - Malların siyahısı`;
+        document.getElementById("reportContainer").innerHTML = tableHtml + summaryHtml;
+        document.getElementById("companyReportModal").style.display = "flex";
     };
     
-    document.getElementById("closeModalBtn")?.addEventListener("click", () => {
-        document.getElementById("companyProductsModal").style.display = "none";
+    // Şəkil yükləmə (təmiz, əlavə düyməsiz)
+    document.getElementById("downloadReportImageBtn")?.addEventListener("click", async () => {
+        const modalContent = document.getElementById("companyReportContent");
+        // Klon yaradırıq ki, orijinal modal dəyişməsin
+        const clone = modalContent.cloneNode(true);
+        // Klondan düymələri olan div-i silirik
+        const btnsDiv = clone.querySelector(".flex-btns");
+        if(btnsDiv) btnsDiv.remove();
+        // Həmçinin əgər başqa düymələr varsa təmizlə
+        clone.style.padding = "20px";
+        clone.style.maxHeight = "none";
+        clone.style.overflow = "visible";
+        document.body.appendChild(clone);
+        try {
+            const canvas = await html2canvas(clone, { scale: 2, backgroundColor: "#1e2a3a" });
+            const link = document.createElement("a");
+            link.download = `company_report_${Date.now()}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        } catch(err) { alert("Şəkil yaratmaq alınmadı: "+err); }
+        finally { document.body.removeChild(clone); }
+    });
+    document.getElementById("closeReportModalBtn")?.addEventListener("click", () => {
+        document.getElementById("companyReportModal").style.display = "none";
     });
     
     function findProductByBarcode(barcode) { return products.find(p=>p.barcode===barcode); }
@@ -306,14 +319,14 @@
         saveProducts();
         document.getElementById("newProductModal").style.display = "none";
         if(window.resolveNewProduct) window.resolveNewProduct(prod);
-        renderHomeProducts(); renderCompanyLists();
+        renderHomeProducts(); renderCompanyLists(); updateBalancesAndStats(); saveCompanies();
         alert("Məhsul yaradıldı");
     });
     document.getElementById("cancelNewProductBtn")?.addEventListener("click", () => {
         document.getElementById("newProductModal").style.display = "none";
         if(window.resolveNewProduct) window.resolveNewProduct(null);
     });
-
+    
     let currentAddProduct = null;
     document.getElementById("findProductAddBtn")?.addEventListener("click", async () => {
         let barcode = document.getElementById("manualBarcodeAdd").value.trim();
