@@ -4,54 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>SATIŞ MİNİ MARKET POS - Tam İnteqrasiya</title>
-
-// ========== LİSENZİYA SİSTEMİ (OFFLINE) ==========
-(function() {
-    // Hər müştəriyə fərqli açar verəcəksiniz (bu nümunə)
-    const VALID_LICENSE = "7x9F#2kL!pQ5";  // Bu dəyəri hər müştəri üçün dəyişin
-    
-    // Lisenziya açarını yoxla
-    let enteredKey = localStorage.getItem("app_license_key");
-    if (!enteredKey) {
-        enteredKey = prompt("═══════════════════════════════════\n" +
-                           "    SATIŞ MARKET POS - LİSENZİYA\n" +
-                           "═══════════════════════════════════\n\n" +
-                           "Zəhmət olmasa lisenziya açarını daxil edin:\n" +
-                           "(Əgər açarınız yoxdursa, əlaqə saxlayın)");
-        if (!enteredKey || enteredKey !== VALID_LICENSE) {
-            alert("❌ Lisenziya açarı YANLIŞDIR!\n\nProqram bağlanır.");
-            document.body.innerHTML = "<div style='text-align:center; padding:50px; color:#ff5555'><h1>❌ Lisenziya tələb olunur</h1><p>Düzgün lisenziya açarı daxil edilməyib.</p></div>";
-            throw new Error("Lisenziya xətası");
-        }
-        localStorage.setItem("app_license_key", enteredKey);
-    } else if (enteredKey !== VALID_LICENSE) {
-        localStorage.removeItem("app_license_key");
-        alert("❌ Lisenziya açarı etibarsız! Proqram yenidən başladılır.");
-        location.reload();
-    }
-    
-    // Vaxt məhdudiyyəti (1 il)
-    const firstRun = localStorage.getItem("app_first_run");
-    const now = Date.now();
-    const oneYearMs = 365 * 24 * 60 * 60 * 1000;
-    
-    if (!firstRun) {
-        localStorage.setItem("app_first_run", now.toString());
-    } else {
-        const elapsed = now - parseInt(firstRun);
-        if (elapsed > oneYearMs) {
-            alert("⏰ Lisenziya müddəti bitmişdir!\n\n1 il ötmüşdür. Yenilənmə üçün bizimlə əlaqə saxlayın.");
-            document.body.innerHTML = "<div style='text-align:center; padding:50px; color:#ff5555'><h1>⏰ Lisenziya müddəti bitib</h1><p>Yenilənmə üçün satıcı ilə əlaqə saxlayın.</p></div>";
-            throw new Error("Lisenziya müddəti bitdi");
-        }
-    }
-    
-    // Qalan günləri göstər (istəyə bağlı)
-    const remainingDays = Math.ceil((oneYearMs - (now - parseInt(localStorage.getItem("app_first_run")))) / (1000*60*60*24));
-    console.log(`✅ Lisenziya etibarlıdır. Qalan gün: ${remainingDays}`);
-})();
-
-    
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
