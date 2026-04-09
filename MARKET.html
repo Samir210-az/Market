@@ -4,14 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>SATIŞ MİNİ MARKET POS - Tam İnteqrasiya</title>
-    <script 
-
- 
-        
-        
-        
-        
-        src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -441,6 +434,7 @@
     
     loadData(); renderHome(); renderCompanies(); renderExpenses(); renderEmployees(); updateTodaySalesDisplay(); checkBirthdayAlerts(); setInterval(()=>{ updateTodaySalesDisplay(); checkBirthdayAlerts(); }, 60000);
 </script>
+</body>
     <div style="position:fixed; bottom:60px; right:10px; z-index:100;">
     <button id="resetAllDataBtn" class="btn danger" style="width:auto; padding:8px 16px; background:#e74c3c; color:white;">
         🗑️ Bütün məlumatları sıfırla
@@ -455,5 +449,4 @@
         }
     });
 </script>
-</body>
 </html>
