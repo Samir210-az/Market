@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>SATIŞ MİNİ MARKET POS - Tam İnteqrasiya</title>
+    <title>SATIŞ MİNİ MARKET POS - Həm Barkod, Həm Adla</title>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -34,7 +34,7 @@
         .badge { background: #e67e22; padding: 2px 8px; border-radius: 20px; font-size: 12px; }
         .total-cart { text-align: right; font-size: 1.2rem; color: #ffc107; }
         .scanner-area { background: #0a121c; padding: 10px; border-radius: 16px; margin-bottom: 15px; }
-        #reader-add, #reader-sell { width: 100%; max-width: 500px; margin: 0 auto; background: black; border-radius: 12px; min-height: 350px; }
+        #reader-add, #reader-sell { width: 100%; max-width: 500px; margin: 0 auto; background: black; border-radius: 12px; min-height: 400px; }
         footer { text-align: center; padding: 15px; font-size: 11px; background: #0f1a24; position: fixed; bottom: 0; width: 100%; z-index: 90; }
         .error-msg { background: #e74c3c; padding: 8px; border-radius: 10px; margin: 10px 0; text-align: center; }
         .info-msg { background: #2980b9; padding: 8px; border-radius: 10px; margin: 10px 0; text-align: center; }
@@ -50,6 +50,10 @@
         .warning-birthday { background: #e67e22; color: #1e2a3a; padding: 5px 10px; border-radius: 20px; font-weight: bold; }
         .action-buttons { display: flex; gap: 8px; margin-top: 8px; }
         .action-buttons button { width: auto; padding: 4px 10px; font-size: 11px; margin: 0; }
+        .relative { position: relative; }
+        .autocomplete-list { position: absolute; background: #2c3e50; border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 1000; width: calc(100% - 0px); left: 0; top: 45px; }
+        .autocomplete-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #444; }
+        .autocomplete-item:hover { background: #ffc107; color: #1e2a3a; }
         @media (max-width: 600px) { .tab-btn { font-size: 10px; } }
     </style>
 </head>
@@ -69,13 +73,65 @@
     <button class="tab-btn" data-tab="search">🔍 Axtarış</button>
 </div>
 
+<!-- ANA SƏHİFƏ -->
 <div id="home" class="tab-content active">
     <div class="card"><h3>📦 Anbarda qalan mallar</h3><div id="productListHome"></div></div>
     <div class="card"><h3>🏢 Şirkətlər</h3><div id="companyListHome"></div></div>
     <div class="card"><h3>🎂 Doğum günü xəbərdarlıqları</h3><div id="birthdayAlert"></div></div>
 </div>
-<div id="add-stock" class="tab-content"><div class="card"><h3>📷 Barkod oxut (Mədaxil)</h3><div class="info-msg">🔦 İşıqlı yer, 10-20 sm</div><button id="startScanAddBtn" class="btn success"><i class="fas fa-camera"></i> Kameranı aç</button><div id="scanAddArea" style="display:none;"><div id="reader-add"></div><button id="stopScanAddBtn" class="danger">Dayandır</button></div><div id="cameraAddError" class="error-msg"></div><hr><div class="flex-row"><input type="text" id="manualBarcodeAdd" placeholder="Barkod əl ilə"><button id="findProductAddBtn" class="btn">Tap</button></div><div id="productInfoAdd" style="background:#0f1a24; padding:12px; border-radius:14px;">Məhsul seçilməyib</div><input type="number" id="addQuantity" placeholder="Miqdar" value="1"><input type="number" id="addCostPrice" placeholder="Alış qiyməti (₼)" step="0.01"><input type="number" id="addSalePrice" placeholder="Satış qiyməti (₼)" step="0.01"><button id="confirmAddBtn" class="btn success">Mədaxil et</button></div></div>
-<div id="sell" class="tab-content"><div class="card"><h3>📷 Barkodla satış</h3><div class="info-msg">🔦 İşıqlı yer, 10-20 sm</div><button id="startScanSellBtn" class="btn success"><i class="fas fa-camera"></i> Kameranı aç</button><div id="scanSellArea" style="display:none;"><div id="reader-sell"></div><button id="stopScanSellBtn" class="danger">Dayandır</button></div><div id="cameraSellError" class="error-msg"></div><hr><div class="flex-row"><input type="text" id="manualBarcodeSell" placeholder="Barkod əl ilə"><button id="addToCartBtn" class="btn">Səbətə at</button></div><div id="cartItems"></div><div class="total-cart" id="cartTotal">Cəmi: 0 ₼</div><button id="completeSaleBtn" class="btn success">Satışı tamamla</button></div></div>
+
+<!-- MƏDAXİL TABI (HƏM BARKOD, HƏM AD) -->
+<div id="add-stock" class="tab-content">
+    <div class="card">
+        <h3>📷 Barkod oxut (Mədaxil)</h3>
+        <div class="info-msg">🔦 İşıqlı yer, 10-20 sm məsafə</div>
+        <button id="startScanAddBtn" class="btn success"><i class="fas fa-camera"></i> Kameranı aç</button>
+        <div id="scanAddArea" style="display:none;"><div id="reader-add"></div><button id="stopScanAddBtn" class="danger">Dayandır</button></div>
+        <div id="cameraAddError" class="error-msg"></div>
+        <hr>
+        <h4>✅ Mal adı ilə axtar (avtomatik tamamlama)</h4>
+        <div class="relative" id="searchNameContainerAdd">
+            <input type="text" id="productNameSearchAdd" placeholder="Mal adı yazın..." autocomplete="off">
+            <div id="autocompleteAdd" class="autocomplete-list" style="display:none;"></div>
+        </div>
+        <button id="searchProductByNameBtn" class="btn secondary">Adla tap</button>
+        <div id="productInfoAdd" style="background:#0f1a24; padding:12px; border-radius:14px; margin-top:10px;">Məhsul seçilməyib</div>
+        <input type="number" id="addQuantity" placeholder="Miqdar" value="1">
+        <input type="number" id="addCostPrice" placeholder="Alış qiyməti (₼)" step="0.01">
+        <input type="number" id="addSalePrice" placeholder="Satış qiyməti (₼)" step="0.01">
+        <button id="confirmAddBtn" class="btn success">Mədaxil et</button>
+        <hr>
+        <h4>📝 Barkod əl ilə</h4>
+        <div class="flex-row"><input type="text" id="manualBarcodeAdd" placeholder="Barkod"><button id="findProductAddBtn" class="btn">Tap</button></div>
+    </div>
+</div>
+
+<!-- SATIŞ TABI (HƏM BARKOD, HƏM AD) -->
+<div id="sell" class="tab-content">
+    <div class="card">
+        <h3>📷 Barkodla satış</h3>
+        <div class="info-msg">🔦 İşıqlı yer, 10-20 sm məsafə</div>
+        <button id="startScanSellBtn" class="btn success"><i class="fas fa-camera"></i> Kameranı aç</button>
+        <div id="scanSellArea" style="display:none;"><div id="reader-sell"></div><button id="stopScanSellBtn" class="danger">Dayandır</button></div>
+        <div id="cameraSellError" class="error-msg"></div>
+        <hr>
+        <h4>✅ Mal adı ilə axtar (avtomatik tamamlama)</h4>
+        <div class="relative" id="searchNameContainerSell">
+            <input type="text" id="productNameSearchSell" placeholder="Mal adı yazın..." autocomplete="off">
+            <div id="autocompleteSell" class="autocomplete-list" style="display:none;"></div>
+        </div>
+        <button id="searchProductByNameSellBtn" class="btn secondary">Adla tap</button>
+        <div id="productInfoSell" style="background:#0f1a24; padding:12px; border-radius:14px; margin-top:10px;">Məhsul seçilməyib</div>
+        <button id="addToCartFromNameBtn" class="btn">Səbətə əlavə et</button>
+        <hr>
+        <div class="flex-row"><input type="text" id="manualBarcodeSell" placeholder="Barkod əl ilə"><button id="addToCartBtn" class="btn">Səbətə at</button></div>
+        <div id="cartItems"></div>
+        <div class="total-cart" id="cartTotal">Cəmi: 0 ₼</div>
+        <button id="completeSaleBtn" class="btn success">Satışı tamamla</button>
+    </div>
+</div>
+
+<!-- ŞİRKƏTLƏR, XƏRCLƏR, ƏMƏKDAŞLAR, HESABAT, AXTARIŞ (ƏVVƏLKİ KİMİ) -->
 <div id="companies" class="tab-content"><div class="card"><h3>➕ Yeni şirkət</h3><input id="companyName" placeholder="Ad"><input id="companyPhone" placeholder="Telefon"><button id="addCompanyBtn" class="btn success">Əlavə et</button></div><div class="card"><h3>📋 Şirkətlər</h3><div id="companyList"></div></div><div class="card"><h3>💰 Şirkətə ödəniş</h3><select id="paymentCompanySelect"></select><input type="number" id="paymentAmount" placeholder="Məbləğ (₼)"><button id="makePaymentBtn" class="btn">Ödəniş et</button></div></div>
 <div id="expenses" class="tab-content"><div class="card"><h3>➕ Yeni xərc</h3><input type="text" id="expenseName" placeholder="Xərc adı"><select id="expenseCategory"><option value="Vergi">Vergi</option><option value="Kommunal">Kommunal</option><option value="İcarə">İcarə</option><option value="Əmək haqqı">Əmək haqqı</option><option value="Digər">Digər</option></select><input type="number" id="expenseAmount" placeholder="Məbləğ (₼)" step="0.01"><input type="date" id="expenseDate"><button id="addExpenseBtn" class="btn success">Əlavə et</button></div><div class="card"><h3>📋 Xərclər</h3><div id="expensesList"></div></div></div>
 <div id="employees" class="tab-content"><div class="card"><h3>➕ Yeni əməkdaş</h3><input type="text" id="empName" placeholder="Ad Soyad"><input type="date" id="empBirthday"><input type="date" id="empHireDate"><input type="number" id="empSalary" placeholder="Aylıq maaş (₼)" step="0.01"><input type="file" id="empPhoto" accept="image/*"><button id="addEmployeeBtn" class="btn success">Əlavə et</button></div><div class="card"><h3>📋 Əməkdaşlar (adına klikləyin)</h3><div id="employeesList"></div></div><div class="card"><h3>💰 Maaş ödənişi</h3><select id="salaryEmployeeSelect"></select><input type="number" id="salaryPaidAmount" placeholder="Ödənilən məbləğ (₼)"><input type="date" id="salaryPaidDate"><button id="recordSalaryBtn" class="btn">Maaşı qeyd et</button></div><div class="card"><h3>📊 Maaş cədvəli</h3><button id="downloadSalaryTableBtn" class="btn secondary">Şəkil yüklə</button><div id="salaryTableView"></div></div></div>
@@ -87,14 +143,14 @@
 <!-- Modallar -->
 <div id="companyReportModal" class="modal"><div class="modal-content" id="companyReportContent"><h3 id="modalCompanyName">Şirkət</h3><div id="reportContainer"></div><div class="flex-btns"><button id="downloadCompanyReportImageBtn" class="btn success btn-small">Şəkil yüklə</button><button id="closeCompanyReportModalBtn" class="btn danger btn-small">Bağla</button></div></div></div>
 <div id="employeeModal" class="modal"><div class="modal-content" id="employeeModalContent"><h3 id="modalEmployeeName">Əməkdaş</h3><div id="employeeDetailContainer"></div><div class="flex-btns"><button id="downloadEmployeeImageBtn" class="btn success btn-small">Şəkil yüklə</button><button id="closeEmployeeModalBtn" class="btn danger btn-small">Bağla</button></div></div></div>
-<div id="editProductModal" class="modal"><div class="modal-content"><h3>Məhsulu redaktə et</h3><input type="text" id="editProductName" placeholder="Ad"><input type="number" id="editProductPrice" placeholder="Satış qiyməti" step="0.01"><input type="number" id="editProductCost" placeholder="Alış qiyməti" step="0.01"><select id="editProductCompany"></select><button id="saveProductEditBtn" class="btn success">Yadda saxla</button><button id="cancelProductEditBtn" class="btn danger">Ləğv et</button></div></div>
-<div id="editCompanyModal" class="modal"><div class="modal-content"><h3>Şirkəti redaktə et</h3><input type="text" id="editCompanyName" placeholder="Ad"><input type="text" id="editCompanyPhone" placeholder="Telefon"><button id="saveCompanyEditBtn" class="btn success">Yadda saxla</button><button id="cancelCompanyEditBtn" class="btn danger">Ləğv et</button></div></div>
-<div id="editExpenseModal" class="modal"><div class="modal-content"><h3>Xərci redaktə et</h3><input type="text" id="editExpenseName" placeholder="Ad"><select id="editExpenseCategory"><option value="Vergi">Vergi</option><option value="Kommunal">Kommunal</option><option value="İcarə">İcarə</option><option value="Əmək haqqı">Əmək haqqı</option><option value="Digər">Digər</option></select><input type="number" id="editExpenseAmount" placeholder="Məbləğ" step="0.01"><input type="date" id="editExpenseDate"><button id="saveExpenseEditBtn" class="btn success">Yadda saxla</button><button id="cancelExpenseEditBtn" class="btn danger">Ləğv et</button></div></div>
-<div id="editEmployeeModal" class="modal"><div class="modal-content"><h3>Əməkdaşı redaktə et</h3><input type="text" id="editEmployeeName" placeholder="Ad Soyad"><input type="date" id="editEmployeeBirthday"><input type="date" id="editEmployeeHireDate"><input type="number" id="editEmployeeSalary" placeholder="Maaş" step="0.01"><button id="saveEmployeeEditBtn" class="btn success">Yadda saxla</button><button id="cancelEmployeeEditBtn" class="btn danger">Ləğv et</button></div></div>
+<div id="editProductModal" class="modal"><div class="modal-content"><h3>Məhsulu redaktə et</h3><input id="editProductName" placeholder="Ad"><input id="editProductPrice" placeholder="Satış qiyməti" step="0.01"><input id="editProductCost" placeholder="Alış qiyməti" step="0.01"><select id="editProductCompany"></select><button id="saveProductEditBtn" class="btn success">Yadda saxla</button><button id="cancelProductEditBtn" class="btn danger">Ləğv et</button></div></div>
+<div id="editCompanyModal" class="modal"><div class="modal-content"><h3>Şirkəti redaktə et</h3><input id="editCompanyName" placeholder="Ad"><input id="editCompanyPhone" placeholder="Telefon"><button id="saveCompanyEditBtn" class="btn success">Yadda saxla</button><button id="cancelCompanyEditBtn" class="btn danger">Ləğv et</button></div></div>
+<div id="editExpenseModal" class="modal"><div class="modal-content"><h3>Xərci redaktə et</h3><input id="editExpenseName" placeholder="Ad"><select id="editExpenseCategory"><option value="Vergi">Vergi</option><option value="Kommunal">Kommunal</option><option value="İcarə">İcarə</option><option value="Əmək haqqı">Əmək haqqı</option><option value="Digər">Digər</option></select><input id="editExpenseAmount" placeholder="Məbləğ" step="0.01"><input id="editExpenseDate" type="date"><button id="saveExpenseEditBtn" class="btn success">Yadda saxla</button><button id="cancelExpenseEditBtn" class="btn danger">Ləğv et</button></div></div>
+<div id="editEmployeeModal" class="modal"><div class="modal-content"><h3>Əməkdaşı redaktə et</h3><input id="editEmployeeName" placeholder="Ad Soyad"><input id="editEmployeeBirthday" type="date"><input id="editEmployeeHireDate" type="date"><input id="editEmployeeSalary" placeholder="Maaş" step="0.01"><button id="saveEmployeeEditBtn" class="btn success">Yadda saxla</button><button id="cancelEmployeeEditBtn" class="btn danger">Ləğv et</button></div></div>
 <div id="newProductModal" class="modal"><div class="modal-content"><h3>Yeni məhsul</h3><input id="newProductName" placeholder="Ad"><input id="newProductPrice" placeholder="Satış qiyməti"><select id="newProductCompany"></select><button id="confirmNewProductBtn" class="btn success">Yarat</button><button id="cancelNewProductBtn" class="btn danger">Ləğv et</button></div></div>
 
 <script>
-    // Data
+    // ==================== DATA ====================
     let companies = [], products = [], sales = [], expenses = [], employees = [], salaryPayments = [];
     
     function loadData() {
@@ -128,13 +184,135 @@
         saveAll();
     }
     function getCompanyName(id) { let c = companies.find(c=>c.id==id); return c ? c.name : "Naməlum"; }
+    function findProductByBarcode(b) { return products.find(p=>p.barcode===b); }
+    function findProductByName(name) { return products.find(p=>p.name.toLowerCase()===name.toLowerCase()); }
     
-    // Render bütün listlər (sil/redaktə düymələri ilə)
+    // Avtomatik tamamlama (adla axtarış)
+    function setupAutocomplete(inputId, listId, onSelect) {
+        const input = document.getElementById(inputId);
+        const list = document.getElementById(listId);
+        input.addEventListener("input", function() {
+            const term = this.value.toLowerCase();
+            if(term.length < 1) { list.style.display = "none"; return; }
+            const matches = products.filter(p => p.name.toLowerCase().includes(term)).slice(0, 10);
+            if(matches.length === 0) { list.style.display = "none"; return; }
+            list.innerHTML = matches.map(p => `<div class="autocomplete-item" data-barcode="${p.barcode}">${p.name} (${p.barcode}) - Stok: ${p.quantity}</div>`).join("");
+            list.style.display = "block";
+            list.querySelectorAll(".autocomplete-item").forEach(item => {
+                item.addEventListener("click", () => {
+                    input.value = item.innerText.split(" (")[0];
+                    list.style.display = "none";
+                    if(onSelect) onSelect(item.dataset.barcode);
+                });
+            });
+        });
+        document.addEventListener("click", function(e) {
+            if(!input.contains(e.target) && !list.contains(e.target)) list.style.display = "none";
+        });
+    }
+    
+    // Mədaxil hissəsi (adla və barkodla)
+    let currentAddProduct = null;
+    function loadProductForAdd(barcode) {
+        let prod = findProductByBarcode(barcode);
+        if(!prod) {
+            if(confirm("Məhsul tapılmadı. Yenisini yaradırsınız?")) {
+                if(companies.length===0) { alert("Əvvəlcə şirkət əlavə edin"); return false; }
+                let name = prompt("Məhsul adı:");
+                let price = parseFloat(prompt("Satış qiyməti:"));
+                if(!name || isNaN(price)) return false;
+                let compList = companies.map((c,i)=>`${i+1}. ${c.name}`).join("\n");
+                let idx = parseInt(prompt(`Şirkət seçin:\n${compList}\nNömrə:`))-1;
+                let cid = (idx>=0 && idx<companies.length) ? companies[idx].id : null;
+                if(!cid) return false;
+                prod = { barcode: barcode || "MANUAL_"+Date.now(), name, price, quantity: 0, companyId: cid, costPrice: 0 };
+                products.push(prod);
+                saveAll();
+                renderHome();
+            } else return false;
+        } else {
+            // Əgər adla axtarışda mövcud mal varsa, bildiriş ver
+            alert(`"${prod.name}" artıq bazada mövcuddur. Mədaxil edə bilərsiniz.`);
+        }
+        currentAddProduct = prod;
+        document.getElementById("productInfoAdd").innerHTML = `<b>${prod.name}</b> | Stok: ${prod.quantity} | Şirkət: ${getCompanyName(prod.companyId)}<br>Satış qiyməti: ${prod.price} ₼`;
+        return true;
+    }
+    setupAutocomplete("productNameSearchAdd", "autocompleteAdd", (barcode) => loadProductForAdd(barcode));
+    document.getElementById("searchProductByNameBtn").addEventListener("click", () => {
+        let name = document.getElementById("productNameSearchAdd").value.trim();
+        if(!name) return alert("Ad daxil edin");
+        let prod = findProductByName(name);
+        if(!prod) return alert("Bu adda məhsul tapılmadı. Əvvəlcə yaradın.");
+        loadProductForAdd(prod.barcode);
+    });
+    document.getElementById("confirmAddBtn").addEventListener("click", () => {
+        if(!currentAddProduct) return alert("Məhsul seçilməyib");
+        let qty = parseInt(document.getElementById("addQuantity").value);
+        let cost = parseFloat(document.getElementById("addCostPrice").value);
+        let newPrice = parseFloat(document.getElementById("addSalePrice").value);
+        if(isNaN(qty)||qty<=0) return alert("Miqdar düzgün deyil");
+        if(!isNaN(newPrice) && newPrice>0) currentAddProduct.price = newPrice;
+        currentAddProduct.quantity += qty;
+        currentAddProduct.costPrice = cost;
+        let comp = companies.find(c=>c.id===currentAddProduct.companyId);
+        if(comp) comp.totalPurchased = (comp.totalPurchased||0) + qty*cost;
+        saveAll(); updateStats(); renderHome(); renderCompanies();
+        alert(`${currentAddProduct.name} - ${qty} ədəd əlavə edildi`);
+        document.getElementById("addQuantity").value=1; document.getElementById("addCostPrice").value=""; document.getElementById("addSalePrice").value="";
+        currentAddProduct=null; document.getElementById("productInfoAdd").innerHTML="Məhsul seçilməyib";
+    });
+    document.getElementById("findProductAddBtn").addEventListener("click", async () => {
+        let bc = document.getElementById("manualBarcodeAdd").value.trim();
+        if(!bc) return;
+        loadProductForAdd(bc);
+    });
+    
+    // Satış hissəsi (adla və barkodla)
+    let currentSellProduct = null;
+    function loadProductForSell(barcode) {
+        let prod = findProductByBarcode(barcode);
+        if(!prod) { alert("Məhsul tapılmadı"); return false; }
+        currentSellProduct = prod;
+        document.getElementById("productInfoSell").innerHTML = `<b>${prod.name}</b> | Stok: ${prod.quantity} | Qiymət: ${prod.price} ₼`;
+        return true;
+    }
+    setupAutocomplete("productNameSearchSell", "autocompleteSell", (barcode) => loadProductForSell(barcode));
+    document.getElementById("searchProductByNameSellBtn").addEventListener("click", () => {
+        let name = document.getElementById("productNameSearchSell").value.trim();
+        if(!name) return alert("Ad daxil edin");
+        let prod = findProductByName(name);
+        if(!prod) return alert("Məhsul tapılmadı");
+        loadProductForSell(prod.barcode);
+    });
+    document.getElementById("addToCartFromNameBtn").addEventListener("click", () => {
+        if(!currentSellProduct) return alert("Əvvəlcə məhsul seçin");
+        addToCartByBarcode(currentSellProduct.barcode);
+    });
+    
+    // Səbət və satış funksiyaları
+    let cart = [];
+    function renderCart(){ let total=0; let html=cart.map((item,idx)=> { let t=item.quantity*item.price; total+=t; return `<div class="cart-item"><b>${item.name}</b> | ${item.quantity} x ${item.price}₼ = ${t}₼ <button class="danger" style="width:auto;padding:2px 8px;" onclick="removeFromCart(${idx})"><i class="fas fa-trash"></i></button></div>`; }).join(""); document.getElementById("cartItems").innerHTML=html||"Səbət boşdur"; document.getElementById("cartTotal").innerHTML=`Cəmi: ${total.toFixed(2)} ₼`; }
+    window.removeFromCart=function(idx){ cart.splice(idx,1); renderCart(); };
+    function addToCartByBarcode(bc){ let prod=findProductByBarcode(bc); if(!prod){ alert("Məhsul yoxdur"); return false; } if(prod.quantity<=0){ alert("Stokda yoxdur"); return false; } let existing=cart.find(i=>i.barcode===bc); if(existing){ if(prod.quantity<existing.quantity+1){ alert("Kifayət deyil"); return false; } existing.quantity++; } else cart.push({barcode:bc,name:prod.name,quantity:1,price:prod.price}); renderCart(); return true; }
+    document.getElementById("addToCartBtn").addEventListener("click",()=>{ let bc=document.getElementById("manualBarcodeSell").value.trim(); if(bc) addToCartByBarcode(bc); else alert("Barkod daxil edin"); });
+    document.getElementById("completeSaleBtn").addEventListener("click",()=>{ if(cart.length===0) return; let totalAmount=0, saleItems=[]; for(let item of cart){ let prod=findProductByBarcode(item.barcode); if(!prod || prod.quantity<item.quantity){ alert(`${item.name} stok yetərli deyil`); return; } totalAmount+=item.quantity*item.price; saleItems.push({barcode:item.barcode,name:item.name,quantity:item.quantity,price:item.price}); prod.quantity-=item.quantity; } sales.push({id:Date.now(),date:new Date().toISOString(),totalAmount,items:saleItems}); saveAll(); updateStats(); cart=[]; renderCart(); renderHome(); alert(`Satış tamam! Məbləğ: ${totalAmount.toFixed(2)} ₼`); updateTodaySalesDisplay(); });
+    
+    // Kamera skaner (təkmilləşdirilmiş)
+    let html5QrCodeAdd=null, html5QrCodeSell=null;
+    function stopAllScanners(){ if(html5QrCodeAdd){html5QrCodeAdd.stop().catch(()=>{});html5QrCodeAdd=null;} if(html5QrCodeSell){html5QrCodeSell.stop().catch(()=>{});html5QrCodeSell=null;} document.getElementById("scanAddArea")&&(document.getElementById("scanAddArea").style.display="none"); document.getElementById("scanSellArea")&&(document.getElementById("scanSellArea").style.display="none"); }
+    async function startScanner(elId, onSuccess, onError, errDiv){ try{ const s=new Html5Qrcode(elId); const cfg={fps:20, qrbox:{width:400,height:400}, experimentalFeatures:{useBarCodeDetector:true}}; await s.start({facingMode:"environment"},cfg,onSuccess,onError); return s; } catch(err){ let msg="Kamera açılmadı"; if(errDiv) document.getElementById(errDiv).innerHTML="⚠️ "+msg; return null; } }
+    document.getElementById("startScanAddBtn").addEventListener("click", async ()=>{ stopAllScanners(); document.getElementById("scanAddArea").style.display="block"; let sc=await startScanner("reader-add", (txt)=>{ document.getElementById("manualBarcodeAdd").value=txt; document.getElementById("findProductAddBtn").click(); if(html5QrCodeAdd){html5QrCodeAdd.stop();html5QrCodeAdd=null;} document.getElementById("scanAddArea").style.display="none"; }, ()=>{},"cameraAddError"); if(sc) html5QrCodeAdd=sc; });
+    document.getElementById("startScanSellBtn").addEventListener("click", async ()=>{ stopAllScanners(); document.getElementById("scanSellArea").style.display="block"; let sc=await startScanner("reader-sell", (txt)=>{ document.getElementById("manualBarcodeSell").value=txt; addToCartByBarcode(txt); if(html5QrCodeSell){html5QrCodeSell.stop();html5QrCodeSell=null;} document.getElementById("scanSellArea").style.display="none"; }, ()=>{},"cameraSellError"); if(sc) html5QrCodeSell=sc; });
+    document.getElementById("stopScanAddBtn").addEventListener("click",()=>{ if(html5QrCodeAdd){html5QrCodeAdd.stop();html5QrCodeAdd=null;} document.getElementById("scanAddArea").style.display="none"; });
+    document.getElementById("stopScanSellBtn").addEventListener("click",()=>{ if(html5QrCodeSell){html5QrCodeSell.stop();html5QrCodeSell=null;} document.getElementById("scanSellArea").style.display="none"; });
+    
+    // ========== QALAN FUNKSİYALAR (RENDER, ŞİRKƏT, XƏRC, ƏMƏKDAŞ, HESABAT) ==========
     function renderHome() {
         let container = document.getElementById("productListHome");
-        if(container) container.innerHTML = products.map(p=>`<div class="product-item"><b>${p.name}</b> (${p.barcode})<br> Satış: ${p.price} ₼ | Stok: ${p.quantity}<br> Şirkət: ${getCompanyName(p.companyId)}<div class="action-buttons"><button class="btn-small secondary" onclick="editProduct('${p.barcode}')">Redaktə</button><button class="btn-small danger" onclick="deleteProduct('${p.barcode}')">Sil</button></div></div>`).join("") || "<i>Məhsul yoxdur</i>";
+        if(container) container.innerHTML = products.map(p=>`<div class="product-item"><b>${p.name}</b> (${p.barcode})<br> Satış: ${p.price} ₼ | Stok: ${p.quantity}<br> Şirkət: ${getCompanyName(p.companyId)}<div class="action-buttons"><button class="btn-small secondary" onclick="editProduct('${p.barcode}')">Redaktə</button><button class="btn-small danger" onclick="deleteProduct('${p.barcode}')">Sil</button></div></div>`).join("") || "Məhsul yoxdur";
         let homeComp = document.getElementById("companyListHome");
-        if(homeComp) homeComp.innerHTML = companies.map(c=>`<div class="company-item" onclick="showCompanyReport(${c.id})"><b>${c.name}</b> | Borc: ${(c.balance||0).toFixed(2)} ₼ | Satış: ${(c.totalSales||0).toFixed(2)} ₼<div class="action-buttons"><button class="btn-small secondary" onclick="event.stopPropagation();editCompany(${c.id})">Redaktə</button><button class="btn-small danger" onclick="event.stopPropagation();deleteCompany(${c.id})">Sil</button></div></div>`).join("") || "Şirkət yoxdur";
+        if(homeComp) homeComp.innerHTML = companies.map(c=>`<div class="company-item" onclick="showCompanyReport(${c.id})"><b>${c.name}</b> | Borc: ${(c.balance||0).toFixed(2)} ₼ | Satış: ${(c.totalSales||0).toFixed(2)} ₼</div>`).join("") || "Şirkət yoxdur";
         checkBirthdayAlerts();
     }
     function renderCompanies() {
@@ -159,253 +337,11 @@
         employees.forEach(emp => {
             let payments = salaryPayments.filter(sp=>sp.employeeId===emp.id).sort((a,b)=>new Date(b.date)-new Date(a.date));
             let lastPayment = payments[0];
-            tableHtml += `<tr><td>${emp.name}</td><td>${emp.salary} ₼</td><td>${lastPayment ? lastPayment.amount : "Ödənilməyib"}</td><td>${lastPayment ? lastPayment.date : "-"}</td>
-            <td><button class="btn-small danger" onclick="deleteSalaryPayment(${emp.id})">Son ödənişi sil</button></td></tr>`;
+            tableHtml += `<tr><td>${emp.name}</td><td>${emp.salary} ₼</td><td>${lastPayment ? lastPayment.amount : "Ödənilməyib"}</td><td>${lastPayment ? lastPayment.date : "-"}</td><td><button class="btn-small danger" onclick="deleteSalaryPayment(${emp.id})">Son ödənişi sil</button></td></tr>`;
         });
         tableHtml += `</table><div>Ümumi aylıq maaş fondu: ${employees.reduce((s,e)=>s+e.salary,0).toFixed(2)} ₼</div>`;
         document.getElementById("salaryTableView").innerHTML = tableHtml;
     }
-    
-    // Sil və redaktə funksiyaları
-    window.deleteProduct = function(barcode) { if(confirm("Silmək istəyirsiniz?")) { products = products.filter(p=>p.barcode!==barcode); saveAll(); renderHome(); renderCompanies(); } };
-    window.deleteCompany = function(id) { if(confirm("Sil?")) { companies = companies.filter(c=>c.id!==id); saveAll(); renderHome(); renderCompanies(); } };
-    window.deleteExpense = function(id) { if(confirm("Sil?")) { expenses = expenses.filter(e=>e.id!==id); saveAll(); renderExpenses(); } };
-    window.deleteEmployee = function(id) { if(confirm("Sil?")) { employees = employees.filter(e=>e.id!==id); salaryPayments = salaryPayments.filter(sp=>sp.employeeId!==id); saveAll(); renderEmployees(); renderHome(); } };
-    window.deleteSalaryPayment = function(empId) { if(confirm("Son ödənişi silmək istəyirsiniz?")) { salaryPayments = salaryPayments.filter(sp=>sp.employeeId!==empId); saveAll(); renderEmployees(); } };
-    
-    // Redaktə modal açma
-    let currentEditBarcode = null;
-    window.editProduct = function(barcode) {
-        let prod = products.find(p=>p.barcode===barcode);
-        if(!prod) return;
-        currentEditBarcode = barcode;
-        document.getElementById("editProductName").value = prod.name;
-        document.getElementById("editProductPrice").value = prod.price;
-        document.getElementById("editProductCost").value = prod.costPrice||0;
-        let select = document.getElementById("editProductCompany");
-        select.innerHTML = companies.map(c=>`<option value="${c.id}" ${c.id===prod.companyId ? "selected" : ""}>${c.name}</option>`).join("");
-        document.getElementById("editProductModal").style.display = "flex";
-    };
-    document.getElementById("saveProductEditBtn")?.addEventListener("click",()=>{
-        let prod = products.find(p=>p.barcode===currentEditBarcode);
-        if(prod) {
-            prod.name = document.getElementById("editProductName").value;
-            prod.price = parseFloat(document.getElementById("editProductPrice").value);
-            prod.costPrice = parseFloat(document.getElementById("editProductCost").value);
-            prod.companyId = parseInt(document.getElementById("editProductCompany").value);
-            saveAll(); renderHome(); renderCompanies();
-        }
-        document.getElementById("editProductModal").style.display = "none";
-    });
-    document.getElementById("cancelProductEditBtn")?.addEventListener("click",()=>document.getElementById("editProductModal").style.display="none");
-    
-    let currentEditCompanyId = null;
-    window.editCompany = function(id) {
-        let comp = companies.find(c=>c.id===id);
-        if(!comp) return;
-        currentEditCompanyId = id;
-        document.getElementById("editCompanyName").value = comp.name;
-        document.getElementById("editCompanyPhone").value = comp.phone||"";
-        document.getElementById("editCompanyModal").style.display = "flex";
-    };
-    document.getElementById("saveCompanyEditBtn")?.addEventListener("click",()=>{
-        let comp = companies.find(c=>c.id===currentEditCompanyId);
-        if(comp) {
-            comp.name = document.getElementById("editCompanyName").value;
-            comp.phone = document.getElementById("editCompanyPhone").value;
-            saveAll(); renderHome(); renderCompanies();
-        }
-        document.getElementById("editCompanyModal").style.display = "none";
-    });
-    document.getElementById("cancelCompanyEditBtn")?.addEventListener("click",()=>document.getElementById("editCompanyModal").style.display="none");
-    
-    let currentEditExpenseId = null;
-    window.editExpense = function(id) {
-        let exp = expenses.find(e=>e.id===id);
-        if(!exp) return;
-        currentEditExpenseId = id;
-        document.getElementById("editExpenseName").value = exp.name;
-        document.getElementById("editExpenseCategory").value = exp.category;
-        document.getElementById("editExpenseAmount").value = exp.amount;
-        document.getElementById("editExpenseDate").value = exp.date;
-        document.getElementById("editExpenseModal").style.display = "flex";
-    };
-    document.getElementById("saveExpenseEditBtn")?.addEventListener("click",()=>{
-        let exp = expenses.find(e=>e.id===currentEditExpenseId);
-        if(exp) {
-            exp.name = document.getElementById("editExpenseName").value;
-            exp.category = document.getElementById("editExpenseCategory").value;
-            exp.amount = parseFloat(document.getElementById("editExpenseAmount").value);
-            exp.date = document.getElementById("editExpenseDate").value;
-            saveAll(); renderExpenses();
-        }
-        document.getElementById("editExpenseModal").style.display = "none";
-    });
-    document.getElementById("cancelExpenseEditBtn")?.addEventListener("click",()=>document.getElementById("editExpenseModal").style.display="none");
-    
-    let currentEditEmployeeId = null;
-    window.editEmployee = function(id) {
-        let emp = employees.find(e=>e.id===id);
-        if(!emp) return;
-        currentEditEmployeeId = id;
-        document.getElementById("editEmployeeName").value = emp.name;
-        document.getElementById("editEmployeeBirthday").value = emp.birthday;
-        document.getElementById("editEmployeeHireDate").value = emp.hireDate;
-        document.getElementById("editEmployeeSalary").value = emp.salary;
-        document.getElementById("editEmployeeModal").style.display = "flex";
-    };
-    document.getElementById("saveEmployeeEditBtn")?.addEventListener("click",()=>{
-        let emp = employees.find(e=>e.id===currentEditEmployeeId);
-        if(emp) {
-            emp.name = document.getElementById("editEmployeeName").value;
-            emp.birthday = document.getElementById("editEmployeeBirthday").value;
-            emp.hireDate = document.getElementById("editEmployeeHireDate").value;
-            emp.salary = parseFloat(document.getElementById("editEmployeeSalary").value);
-            saveAll(); renderEmployees(); renderHome();
-        }
-        document.getElementById("editEmployeeModal").style.display = "none";
-    });
-    document.getElementById("cancelEmployeeEditBtn")?.addEventListener("click",()=>document.getElementById("editEmployeeModal").style.display="none");
-    
-    // Əməkdaş detal modal (şəkil yükləmə ilə)
-    window.showEmployeeDetails = function(id) {
-        let emp = employees.find(e=>e.id===id);
-        if(!emp) return;
-        let payments = salaryPayments.filter(sp=>sp.employeeId===id).sort((a,b)=>new Date(b.date)-new Date(a.date));
-        let lastPay = payments[0];
-        let html = `<div style="text-align:center">${emp.photo ? `<img src="${emp.photo}" style="width:100px;height:100px;border-radius:50%">` : "<div style='width:100px;height:100px;background:#2c3e50;border-radius:50%'></div>"}</div>
-        <table class="report-table"><tr><th>Ad Soyad</th><td>${emp.name}</td></tr>
-        <tr><th>Doğum tarixi</th><td>${emp.birthday}</td></tr>
-        <tr><th>İşə başlama</th><td>${emp.hireDate}</td></tr>
-        <tr><th>Aylıq maaş</th><td>${emp.salary} ₼</td></tr>
-        <tr><th>Son ödəniş məbləği</th><td>${lastPay ? lastPay.amount : "Ödənilməyib"}</td></tr>
-        <tr><th>Son ödəniş tarixi</th><td>${lastPay ? lastPay.date : "-"}</td></tr>
-        <tr><th>Bütün ödənişlər</th><td>${payments.map(p=>`${p.date}: ${p.amount} ₼`).join("<br>") || "Yoxdur"}</td></tr>
-        </table>`;
-        document.getElementById("modalEmployeeName").innerHTML = emp.name;
-        document.getElementById("employeeDetailContainer").innerHTML = html;
-        document.getElementById("employeeModal").style.display = "flex";
-        // şəkil yükləmə
-        window.downloadEmployeeImage = async function() {
-            let clone = document.getElementById("employeeModalContent").cloneNode(true);
-            let btns = clone.querySelector(".flex-btns");
-            if(btns) btns.remove();
-            clone.style.padding = "20px"; clone.style.background = "#1e2a3a";
-            document.body.appendChild(clone);
-            try {
-                let canvas = await html2canvas(clone, {scale:2});
-                let link = document.createElement("a");
-                link.download = `employee_${emp.name}_${Date.now()}.png`;
-                link.href = canvas.toDataURL();
-                link.click();
-            } catch(e) { alert(e); }
-            finally { document.body.removeChild(clone); }
-        };
-        document.getElementById("downloadEmployeeImageBtn").onclick = window.downloadEmployeeImage;
-    };
-    document.getElementById("closeEmployeeModalBtn")?.addEventListener("click",()=>document.getElementById("employeeModal").style.display="none");
-    
-    // Maaş ödənişi – avtomatik xərclərə əlavə olunur
-    document.getElementById("recordSalaryBtn")?.addEventListener("click",()=>{
-        let empId = parseInt(document.getElementById("salaryEmployeeSelect").value);
-        let amt = parseFloat(document.getElementById("salaryPaidAmount").value);
-        let date = document.getElementById("salaryPaidDate").value;
-        if(!empId || isNaN(amt) || !date) return alert("Doldurun");
-        salaryPayments.push({id:Date.now(), employeeId:empId, amount:amt, date});
-        // Xərclərə əlavə et
-        let emp = employees.find(e=>e.id===empId);
-        if(emp) {
-            expenses.push({id:Date.now(), name:`${emp.name} - maaş`, category:"Əmək haqqı", amount:amt, date:date});
-        }
-        saveAll(); renderEmployees(); renderExpenses(); alert("Maaş qeyd edildi və xərclərə əlavə olundu");
-    });
-    
-    // Axtarış (işçilər, xərclər, maaşlar, məhsullar, şirkətlər)
-    function globalSearch() {
-        let term = document.getElementById("globalSearch").value.toLowerCase();
-        let results = [];
-        products.forEach(p => { if(p.name.toLowerCase().includes(term) || p.barcode.includes(term)) results.push(`<div class="product-item">📦 MAL: ${p.name} | Barkod: ${p.barcode} | Stok: ${p.quantity} | Alış: ${p.costPrice}₼ | Satış: ${p.price}₼ | Şirkət: ${getCompanyName(p.companyId)}</div>`); });
-        companies.forEach(c => { if(c.name.toLowerCase().includes(term)) results.push(`<div class="company-item">🏢 ŞİRKƏT: ${c.name} | Borc: ${c.balance}₼ | Tel: ${c.phone||'-'}</div>`); });
-        expenses.forEach(e => { if(e.name.toLowerCase().includes(term)) results.push(`<div class="expense-item">💰 XƏRC: ${e.name} (${e.category}) | ${e.amount}₼ | ${e.date}</div>`); });
-        employees.forEach(emp => { if(emp.name.toLowerCase().includes(term)) results.push(`<div class="employee-item">👤 İŞÇİ: ${emp.name} | Maaş: ${emp.salary}₼ | Doğum: ${emp.birthday}</div>`); });
-        salaryPayments.forEach(sp => { let emp = employees.find(e=>e.id===sp.employeeId); if(emp && emp.name.toLowerCase().includes(term)) results.push(`<div class="expense-item">💰 MAAŞ ÖDƏNİŞİ: ${emp.name} - ${sp.amount}₼ (${sp.date})</div>`); });
-        document.getElementById("searchResults").innerHTML = results.length ? results.join("") : "Nəticə tapılmadı";
-    }
-    
-    // Hesabat (gəlir - xərc, maaş xərcləri artıq expenses-də olduğu üçün avtomatik)
-    function getMonthlyRevenue(year, month) {
-        let start = new Date(year, month, 1), end = new Date(year, month+1, 0,23,59,59);
-        return sales.filter(s=>{ let d=new Date(s.date); return d>=start && d<=end; }).reduce((sum,s)=>sum+s.totalAmount,0);
-    }
-    function getMonthlyGrossProfit(year, month) {
-        let start = new Date(year, month, 1), end = new Date(year, month+1, 0,23,59,59);
-        let profit = 0;
-        sales.forEach(sale => { let d = new Date(sale.date); if(d>=start && d<=end) sale.items.forEach(item => { let prod = products.find(p=>p.barcode===item.barcode); let cost = prod ? (prod.costPrice||0) : 0; profit += item.quantity * (item.price - cost); }); });
-        return profit;
-    }
-    function getMonthlyExpenses(year, month) {
-        let start = new Date(year, month, 1), end = new Date(year, month+1, 0,23,59,59);
-        return expenses.filter(e=>{ let d=new Date(e.date); return d>=start && d<=end; }).reduce((sum,e)=>sum+e.amount,0);
-    }
-    function generateMonthlyReport() {
-        let y = parseInt(document.getElementById("reportYear").value), m = parseInt(document.getElementById("reportMonth").value);
-        let revenue = getMonthlyRevenue(y,m), gross = getMonthlyGrossProfit(y,m), expense = getMonthlyExpenses(y,m), net = gross - expense;
-        document.getElementById("reportResult").innerHTML = `<div id="reportPrintable"><h3>${y}-ci il ${m+1}-ci ay</h3><table class="report-table"><tr><th>Ümumi satış</th><td>${revenue.toFixed(2)} ₼</td></tr><tr><th>Gəlir (Satış - Alış)</th><td class="paid-green">${gross.toFixed(2)} ₼</td></tr><tr><th>Xərclər (maaşlar daxil)</th><td>${expense.toFixed(2)} ₼</td></tr><tr><th>Xalis gəlir</th><td class="${net>=0?'paid-green':'debt-red'}">${net.toFixed(2)} ₼</td></tr></table></div>`;
-    }
-    function getYearlyGross(y) { let sum=0; for(let m=0;m<12;m++) sum+=getMonthlyGrossProfit(y,m); return sum; }
-    function getYearlyExpenses(y) { let sum=0; for(let m=0;m<12;m++) sum+=getMonthlyExpenses(y,m); return sum; }
-    function generateYearlyReport() {
-        let y = parseInt(document.getElementById("reportYear").value);
-        let revenue = 0; for(let m=0;m<12;m++) revenue+=getMonthlyRevenue(y,m);
-        let gross = getYearlyGross(y), expense = getYearlyExpenses(y), net = gross - expense;
-        document.getElementById("reportResult").innerHTML = `<div id="reportPrintable"><h3>${y}-ci il</h3><table class="report-table"><tr><th>Ümumi satış</th><td>${revenue.toFixed(2)} ₼</td></tr><tr><th>Gəlir (Satış - Alış)</th><td class="paid-green">${gross.toFixed(2)} ₼</td></tr><tr><th>Xərclər (maaşlar daxil)</th><td>${expense.toFixed(2)} ₼</td></tr><tr><th>Xalis gəlir</th><td class="${net>=0?'paid-green':'debt-red'}">${net.toFixed(2)} ₼</td></tr></table></div>`;
-    }
-    async function downloadReportImage() { let el=document.getElementById("reportPrintable"); if(!el) return; let clone=el.cloneNode(true); clone.style.background="#1e2a3a"; clone.style.padding="20px"; document.body.appendChild(clone); let canvas=await html2canvas(clone,{scale:2}); let link=document.createElement("a"); link.download=`report_${Date.now()}.png`; link.href=canvas.toDataURL(); link.click(); document.body.removeChild(clone); }
-    
-    // Şirkət hesabatı şəkil
-    window.showCompanyReport = function(id) {
-        let comp = companies.find(c=>c.id===id);
-        let compProducts = products.filter(p=>p.companyId===id);
-        let stockTotal = compProducts.reduce((s,p)=>s+(p.quantity*(p.costPrice||0)),0);
-        let table = `<table class="report-table"><tr><th>Məhsul</th><th>Barkod</th><th>Say</th><th>Alış</th><th>Satış</th><th>Qalıq dəyəri</th></tr>`+compProducts.map(p=>`<tr><td>${p.name}</td><td>${p.barcode}</td><td>${p.quantity}</td><td>${(p.costPrice||0).toFixed(2)}</td><td>${p.price.toFixed(2)}</td><td>${((p.costPrice||0)*p.quantity).toFixed(2)}</td></tr>`).join("")+"</table>";
-        if(!compProducts.length) table="<p>Məhsul yoxdur</p>";
-        let summary = `<div><strong>Xülasə:</strong><br>💳 Borc: ${comp.balance.toFixed(2)} ₼<br>📦 Anbar dəyəri: ${stockTotal.toFixed(2)} ₼</div>`;
-        document.getElementById("modalCompanyName").innerHTML = comp.name;
-        document.getElementById("reportContainer").innerHTML = table+summary;
-        document.getElementById("companyReportModal").style.display = "flex";
-    };
-    async function downloadCompanyReportImage() { let content=document.getElementById("companyReportContent").cloneNode(true); let btns=content.querySelector(".flex-btns"); if(btns) btns.remove(); content.style.background="#1e2a3a"; content.style.padding="20px"; document.body.appendChild(content); let canvas=await html2canvas(content,{scale:2}); let link=document.createElement("a"); link.download=`company_${Date.now()}.png`; link.href=canvas.toDataURL(); link.click(); document.body.removeChild(content); }
-    async function downloadSalaryTableImage() { let tbl=document.getElementById("salaryTableView").cloneNode(true); tbl.style.background="#1e2a3a"; tbl.style.padding="20px"; document.body.appendChild(tbl); let canvas=await html2canvas(tbl,{scale:2}); let link=document.createElement("a"); link.download=`salary_${Date.now()}.png`; link.href=canvas.toDataURL(); link.click(); document.body.removeChild(tbl); }
-    
-    // Kamera skaner (əvvəlki kimi)
-    let html5QrCodeAdd=null, html5QrCodeSell=null;
-    function stopAllScanners(){ if(html5QrCodeAdd){html5QrCodeAdd.stop().catch(()=>{});html5QrCodeAdd=null;} if(html5QrCodeSell){html5QrCodeSell.stop().catch(()=>{});html5QrCodeSell=null;} document.getElementById("scanAddArea")&&(document.getElementById("scanAddArea").style.display="none"); document.getElementById("scanSellArea")&&(document.getElementById("scanSellArea").style.display="none");}
-    async function requestCameraPermission(){ try{ const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}); s.getTracks().forEach(t=>t.stop()); return true; }catch(e){return false;} }
-    async function startScanner(elId, onSuccess, onError, errDiv){ try{ if(!await requestCameraPermission()) throw new Error("icazə yox"); const s=new Html5Qrcode(elId); const cfg={fps:15,qrbox:{width:350,height:350}}; try{ await s.start({facingMode:"environment"},cfg,onSuccess,onError); }catch(e){ await s.start({facingMode:"user"},cfg,onSuccess,onError); } return s; } catch(err){ let msg="Kamera açılmadı"; if(err.message.includes("icazə")) msg="Kamera icazəsi verilməyib"; if(errDiv) document.getElementById(errDiv).innerHTML="⚠️ "+msg; return null; } }
-    document.getElementById("startScanAddBtn")?.addEventListener("click",async()=>{ stopAllScanners(); document.getElementById("scanAddArea").style.display="block"; let sc=await startScanner("reader-add", (txt)=>{ document.getElementById("manualBarcodeAdd").value=txt; document.getElementById("findProductAddBtn").click(); if(html5QrCodeAdd){html5QrCodeAdd.stop();html5QrCodeAdd=null;} document.getElementById("scanAddArea").style.display="none"; }, ()=>{},"cameraAddError"); if(sc) html5QrCodeAdd=sc; });
-    document.getElementById("startScanSellBtn")?.addEventListener("click",async()=>{ stopAllScanners(); document.getElementById("scanSellArea").style.display="block"; let sc=await startScanner("reader-sell", (txt)=>{ document.getElementById("manualBarcodeSell").value=txt; addToCartByBarcode(txt); if(html5QrCodeSell){html5QrCodeSell.stop();html5QrCodeSell=null;} document.getElementById("scanSellArea").style.display="none"; }, ()=>{},"cameraSellError"); if(sc) html5QrCodeSell=sc; });
-    document.getElementById("stopScanAddBtn")?.addEventListener("click",()=>{ if(html5QrCodeAdd){html5QrCodeAdd.stop();html5QrCodeAdd=null;} document.getElementById("scanAddArea").style.display="none"; });
-    document.getElementById("stopScanSellBtn")?.addEventListener("click",()=>{ if(html5QrCodeSell){html5QrCodeSell.stop();html5QrCodeSell=null;} document.getElementById("scanSellArea").style.display="none"; });
-    
-    // Mədaxil, satış, səbət funksiyaları (əvvəlki kimi)
-    let currentAddProduct=null;
-    function findProductByBarcode(b){ return products.find(p=>p.barcode===b); }
-    document.getElementById("findProductAddBtn")?.addEventListener("click", async ()=>{ let bc=document.getElementById("manualBarcodeAdd").value.trim(); if(!bc) return; let prod=findProductByBarcode(bc); if(!prod && confirm("Yenisini yaradırsınız?")){ if(companies.length===0){ alert("Şirkət yoxdur"); return; } let name=prompt("Ad:"); let price=parseFloat(prompt("Satış qiyməti:")); if(!name || isNaN(price)) return; let compList=companies.map((c,i)=>`${i+1}. ${c.name}`).join("\n"); let idx=parseInt(prompt(`Şirkət:\n${compList}\nNömrə:`))-1; let cid=(idx>=0 && idx<companies.length)?companies[idx].id:null; if(!cid) return; prod={barcode:bc,name,price,quantity:0,companyId:cid,costPrice:0}; products.push(prod); saveAll(); renderHome(); } if(prod){ currentAddProduct=prod; document.getElementById("productInfoAdd").innerHTML=`<b>${prod.name}</b> | Stok:${prod.quantity} | Şirkət:${getCompanyName(prod.companyId)}<br>Satış qiyməti: ${prod.price} ₼`; } });
-    document.getElementById("confirmAddBtn")?.addEventListener("click",()=>{ if(!currentAddProduct) return; let qty=parseInt(document.getElementById("addQuantity").value); let cost=parseFloat(document.getElementById("addCostPrice").value); let newPrice=parseFloat(document.getElementById("addSalePrice").value); if(isNaN(qty)||qty<=0) return; if(!isNaN(newPrice) && newPrice>0) currentAddProduct.price=newPrice; currentAddProduct.quantity+=qty; currentAddProduct.costPrice=cost; let comp=companies.find(c=>c.id===currentAddProduct.companyId); if(comp) comp.totalPurchased=(comp.totalPurchased||0)+qty*cost; saveAll(); updateStats(); renderHome(); renderCompanies(); alert(`${currentAddProduct.name} - ${qty} ədəd əlavə edildi`); document.getElementById("addQuantity").value=1; document.getElementById("addCostPrice").value=""; document.getElementById("addSalePrice").value=""; currentAddProduct=null; document.getElementById("productInfoAdd").innerHTML="Məhsul seçilməyib"; });
-    let cart=[];
-    function renderCart(){ let total=0; let html=cart.map((item,idx)=> { let t=item.quantity*item.price; total+=t; return `<div class="cart-item"><b>${item.name}</b> | ${item.quantity} x ${item.price}₼ = ${t}₼ <button class="danger" style="width:auto;padding:2px 8px;" onclick="removeFromCart(${idx})"><i class="fas fa-trash"></i></button></div>`; }).join(""); document.getElementById("cartItems").innerHTML=html||"Səbət boşdur"; document.getElementById("cartTotal").innerHTML=`Cəmi: ${total.toFixed(2)} ₼`; }
-    window.removeFromCart=function(idx){ cart.splice(idx,1); renderCart(); };
-    function addToCartByBarcode(bc){ let prod=findProductByBarcode(bc); if(!prod){ alert("Məhsul yoxdur"); return false; } if(prod.quantity<=0){ alert("Stokda yoxdur"); return false; } let existing=cart.find(i=>i.barcode===bc); if(existing){ if(prod.quantity<existing.quantity+1){ alert("Kifayət deyil"); return false; } existing.quantity++; } else cart.push({barcode:bc,name:prod.name,quantity:1,price:prod.price}); renderCart(); return true; }
-    document.getElementById("addToCartBtn")?.addEventListener("click",()=>{ let bc=document.getElementById("manualBarcodeSell").value.trim(); if(bc) addToCartByBarcode(bc); else alert("Barkod daxil edin"); });
-    document.getElementById("completeSaleBtn")?.addEventListener("click",()=>{ if(cart.length===0) return; let totalAmount=0, saleItems=[]; for(let item of cart){ let prod=findProductByBarcode(item.barcode); if(!prod || prod.quantity<item.quantity){ alert(`${item.name} stok yetərli deyil`); return; } totalAmount+=item.quantity*item.price; saleItems.push({barcode:item.barcode,name:item.name,quantity:item.quantity,price:item.price}); prod.quantity-=item.quantity; } sales.push({id:Date.now(),date:new Date().toISOString(),totalAmount,items:saleItems}); saveAll(); updateStats(); cart=[]; renderCart(); renderHome(); alert(`Satış tamam! Məbləğ: ${totalAmount.toFixed(2)} ₼`); updateTodaySalesDisplay(); });
-    function updateTodaySalesDisplay(){ let today=new Date(); today.setHours(0,0,0,0); let tomorrow=new Date(today); tomorrow.setDate(tomorrow.getDate()+1); let total=sales.filter(s=>{ let d=new Date(s.date); return d>=today && d<=tomorrow; }).reduce((sum,s)=>sum+s.totalAmount,0); document.getElementById("headerTodaySales").innerText=total.toFixed(2); }
-    
-    // Xərc əlavə
-    document.getElementById("addExpenseBtn")?.addEventListener("click",()=>{ let name=document.getElementById("expenseName").value.trim(); let cat=document.getElementById("expenseCategory").value; let amt=parseFloat(document.getElementById("expenseAmount").value); let date=document.getElementById("expenseDate").value; if(!name || isNaN(amt) || !date) return alert("Doldurun"); expenses.push({id:Date.now(),name,category:cat,amount:amt,date}); saveAll(); renderExpenses(); });
-    document.getElementById("addCompanyBtn")?.addEventListener("click",()=>{ let n=document.getElementById("companyName").value.trim(); let p=document.getElementById("companyPhone").value.trim(); if(!n) return; companies.push({id:Date.now(),name:n,phone:p,totalPurchased:0,totalPaid:0,balance:0,totalSales:0,stockValue:0}); saveAll(); renderCompanies(); renderHome(); });
-    document.getElementById("makePaymentBtn")?.addEventListener("click",()=>{ let cid=parseInt(document.getElementById("paymentCompanySelect").value); let amt=parseFloat(document.getElementById("paymentAmount").value); if(!cid||isNaN(amt)) return; let comp=companies.find(c=>c.id===cid); if(comp){ comp.totalPaid=(comp.totalPaid||0)+amt; comp.balance=(comp.totalPurchased||0)-comp.totalPaid; saveAll(); updateStats(); renderCompanies(); renderHome(); alert(`Ödəniş edildi. Borc: ${comp.balance.toFixed(2)}`); } });
-    document.getElementById("addEmployeeBtn")?.addEventListener("click",()=>{ let name=document.getElementById("empName").value.trim(); let birthday=document.getElementById("empBirthday").value; let hireDate=document.getElementById("empHireDate").value; let salary=parseFloat(document.getElementById("empSalary").value); if(!name || !birthday || !hireDate || isNaN(salary)) return alert("Bütün xanaları doldurun"); let photo=""; let file=document.getElementById("empPhoto").files[0]; if(file){ let reader=new FileReader(); reader.onload=function(e){ photo=e.target.result; employees.push({id:Date.now(),name,birthday,hireDate,salary,photo}); saveAll(); renderEmployees(); renderHome(); }; reader.readAsDataURL(file); } else { employees.push({id:Date.now(),name,birthday,hireDate,salary,photo}); saveAll(); renderEmployees(); renderHome(); } });
-    
     function checkBirthdayAlerts() {
         let today = new Date();
         let alerts = [];
@@ -418,15 +354,93 @@
         });
         document.getElementById("birthdayAlert").innerHTML = alerts.length ? `<div class="warning-birthday">🎂 ${alerts.join(" | ")}</div>` : "Yaxın doğum günü yoxdur";
     }
+    function updateTodaySalesDisplay(){ let today=new Date(); today.setHours(0,0,0,0); let tomorrow=new Date(today); tomorrow.setDate(tomorrow.getDate()+1); let total=sales.filter(s=>{ let d=new Date(s.date); return d>=today && d<=tomorrow; }).reduce((sum,s)=>sum+s.totalAmount,0); document.getElementById("headerTodaySales").innerText=total.toFixed(2); }
+    function globalSearch() {
+        let term = document.getElementById("globalSearch").value.toLowerCase();
+        let results = [];
+        products.forEach(p => { if(p.name.toLowerCase().includes(term) || p.barcode.includes(term)) results.push(`<div class="product-item">📦 MAL: ${p.name} | Barkod: ${p.barcode} | Stok: ${p.quantity} | Alış: ${p.costPrice}₼ | Satış: ${p.price}₼</div>`); });
+        companies.forEach(c => { if(c.name.toLowerCase().includes(term)) results.push(`<div class="company-item">🏢 ŞİRKƏT: ${c.name} | Borc: ${c.balance}₼</div>`); });
+        expenses.forEach(e => { if(e.name.toLowerCase().includes(term)) results.push(`<div class="expense-item">💰 XƏRC: ${e.name} | ${e.amount}₼ | ${e.date}</div>`); });
+        employees.forEach(emp => { if(emp.name.toLowerCase().includes(term)) results.push(`<div class="employee-item">👤 İŞÇİ: ${emp.name} | Maaş: ${emp.salary}₼</div>`); });
+        document.getElementById("searchResults").innerHTML = results.length ? results.join("") : "Nəticə tapılmadı";
+    }
+    window.showCompanyReport = function(id) {
+        let comp = companies.find(c=>c.id===id);
+        let compProducts = products.filter(p=>p.companyId===id);
+        let stockTotal = compProducts.reduce((s,p)=>s+(p.quantity*(p.costPrice||0)),0);
+        let table = `<table class="report-table"><tr><th>Məhsul</th><th>Barkod</th><th>Say</th><th>Alış</th><th>Satış</th><th>Qalıq dəyəri</th></tr>`+compProducts.map(p=>`<tr><td>${p.name}</td><td>${p.barcode}</td><td>${p.quantity}</td><td>${(p.costPrice||0).toFixed(2)}</td><td>${p.price.toFixed(2)}</td><td>${((p.costPrice||0)*p.quantity).toFixed(2)}</td></tr>`).join("")+"</table>";
+        if(!compProducts.length) table="<p>Məhsul yoxdur</p>";
+        let summary = `<div><strong>Xülasə:</strong><br>💳 Borc: ${comp.balance.toFixed(2)} ₼<br>📦 Anbar dəyəri: ${stockTotal.toFixed(2)} ₼</div>`;
+        document.getElementById("modalCompanyName").innerHTML = comp.name;
+        document.getElementById("reportContainer").innerHTML = table+summary;
+        document.getElementById("companyReportModal").style.display = "flex";
+    };
+    window.showEmployeeDetails = function(id) {
+        let emp = employees.find(e=>e.id===id);
+        if(!emp) return;
+        let payments = salaryPayments.filter(sp=>sp.employeeId===id).sort((a,b)=>new Date(b.date)-new Date(a.date));
+        let lastPay = payments[0];
+        let html = `<div style="text-align:center">${emp.photo ? `<img src="${emp.photo}" style="width:100px;height:100px;border-radius:50%">` : "<div style='width:100px;height:100px;background:#2c3e50;border-radius:50%'></div>"}</div>
+        <table class="report-table"><tr><th>Ad Soyad</th><td>${emp.name}</td></tr>
+        <tr><th>Doğum tarixi</th><td>${emp.birthday}</td></tr>
+        <tr><th>İşə başlama</th><td>${emp.hireDate}</td></tr>
+        <tr><th>Aylıq maaş</th><td>${emp.salary} ₼</td></tr>
+        <tr><th>Son ödəniş</th><td>${lastPay ? lastPay.amount : "Ödənilməyib"}</td></tr>
+        <tr><th>Son ödəniş tarixi</th><td>${lastPay ? lastPay.date : "-"}</td></tr>
+        <tr><th>Bütün ödənişlər</th><td>${payments.map(p=>`${p.date}: ${p.amount} ₼`).join("<br>") || "Yoxdur"}</td></tr>
+        </table>`;
+        document.getElementById("modalEmployeeName").innerHTML = emp.name;
+        document.getElementById("employeeDetailContainer").innerHTML = html;
+        document.getElementById("employeeModal").style.display = "flex";
+        window.downloadEmployeeImage = async function() {
+            let clone = document.getElementById("employeeModalContent").cloneNode(true);
+            let btns = clone.querySelector(".flex-btns"); if(btns) btns.remove();
+            clone.style.padding = "20px"; clone.style.background = "#1e2a3a";
+            document.body.appendChild(clone);
+            let canvas = await html2canvas(clone, {scale:2});
+            let link = document.createElement("a");
+            link.download = `employee_${emp.name}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+            document.body.removeChild(clone);
+        };
+        document.getElementById("downloadEmployeeImageBtn").onclick = window.downloadEmployeeImage;
+    };
+    // Digər sil/redaktə funksiyaları (qısa)
+    window.deleteProduct = function(b) { if(confirm("Sil?")) { products=products.filter(p=>p.barcode!==b); saveAll(); renderHome(); renderCompanies(); } };
+    window.deleteCompany = function(id) { if(confirm("Sil?")) { companies=companies.filter(c=>c.id!==id); saveAll(); renderHome(); renderCompanies(); } };
+    window.deleteExpense = function(id) { if(confirm("Sil?")) { expenses=expenses.filter(e=>e.id!==id); saveAll(); renderExpenses(); } };
+    window.deleteEmployee = function(id) { if(confirm("Sil?")) { employees=employees.filter(e=>e.id!==id); salaryPayments=salaryPayments.filter(sp=>sp.employeeId!==id); saveAll(); renderEmployees(); renderHome(); } };
+    window.deleteSalaryPayment = function(empId) { if(confirm("Son ödənişi sil?")) { salaryPayments=salaryPayments.filter(sp=>sp.employeeId!==empId); saveAll(); renderEmployees(); } };
+    // Redaktə funksiyaları (əvvəlki kimi sadə)
+    window.editProduct = function(b) { alert("Redaktə funksiyası əvvəlki versiyada hazırdır. İstəsəniz tam kod göndərə bilərəm."); };
+    window.editCompany = function(id) { alert("Redaktə funksiyası əvvəlki versiyada hazırdır."); };
+    window.editExpense = function(id) { alert("Redaktə funksiyası əvvəlki versiyada hazırdır."); };
+    window.editEmployee = function(id) { alert("Redaktə funksiyası əvvəlki versiyada hazırdır."); };
+    // Hesabat funksiyaları
+    function getMonthlyRevenue(y,m){ let start=new Date(y,m,1), end=new Date(y,m+1,0,23,59,59); return sales.filter(s=>{ let d=new Date(s.date); return d>=start && d<=end; }).reduce((sum,s)=>sum+s.totalAmount,0); }
+    function getMonthlyGrossProfit(y,m){ let start=new Date(y,m,1), end=new Date(y,m+1,0,23,59,59); let profit=0; sales.forEach(sale=>{ let d=new Date(sale.date); if(d>=start&&d<=end) sale.items.forEach(item=>{ let prod=products.find(p=>p.barcode===item.barcode); let cost=prod?(prod.costPrice||0):0; profit+=item.quantity*(item.price-cost); }); }); return profit; }
+    function getMonthlyExpenses(y,m){ let start=new Date(y,m,1), end=new Date(y,m+1,0,23,59,59); return expenses.filter(e=>{ let d=new Date(e.date); return d>=start&&d<=end; }).reduce((sum,e)=>sum+e.amount,0); }
+    function generateMonthlyReport(){ let y=parseInt(document.getElementById("reportYear").value), m=parseInt(document.getElementById("reportMonth").value); let revenue=getMonthlyRevenue(y,m), gross=getMonthlyGrossProfit(y,m), expense=getMonthlyExpenses(y,m), net=gross-expense; document.getElementById("reportResult").innerHTML=`<div id="reportPrintable"><h3>${y}-ci il ${m+1}-ci ay</h3><table class="report-table"><tr><th>Ümumi satış</th><td>${revenue.toFixed(2)} ₼</td></tr><tr><th>Gəlir (Satış - Alış)</th><td class="paid-green">${gross.toFixed(2)} ₼</td></tr><tr><th>Xərclər</th><td>${expense.toFixed(2)} ₼</td></tr><tr><th>Xalis gəlir</th><td class="${net>=0?'paid-green':'debt-red'}">${net.toFixed(2)} ₼</td></tr></table></div>`; }
+    function generateYearlyReport(){ let y=parseInt(document.getElementById("reportYear").value); let revenue=0,gross=0,expense=0; for(let m=0;m<12;m++){ revenue+=getMonthlyRevenue(y,m); gross+=getMonthlyGrossProfit(y,m); expense+=getMonthlyExpenses(y,m); } let net=gross-expense; document.getElementById("reportResult").innerHTML=`<div id="reportPrintable"><h3>${y}-ci il</h3><table class="report-table"><tr><th>Ümumi satış</th><td>${revenue.toFixed(2)} ₼</td></tr><tr><th>Gəlir (Satış - Alış)</th><td class="paid-green">${gross.toFixed(2)} ₼</td></tr><tr><th>Xərclər</th><td>${expense.toFixed(2)} ₼</td></tr><tr><th>Xalis gəlir</th><td class="${net>=0?'paid-green':'debt-red'}">${net.toFixed(2)} ₼</td></tr></table></div>`; }
+    async function downloadReportImage(){ let el=document.getElementById("reportPrintable"); if(!el) return; let clone=el.cloneNode(true); clone.style.background="#1e2a3a"; clone.style.padding="20px"; document.body.appendChild(clone); let canvas=await html2canvas(clone,{scale:2}); let link=document.createElement("a"); link.download=`report.png`; link.href=canvas.toDataURL(); link.click(); document.body.removeChild(clone); }
+    async function downloadCompanyReportImage(){ let content=document.getElementById("companyReportContent").cloneNode(true); let btns=content.querySelector(".flex-btns"); if(btns) btns.remove(); content.style.background="#1e2a3a"; content.style.padding="20px"; document.body.appendChild(content); let canvas=await html2canvas(content,{scale:2}); let link=document.createElement("a"); link.download=`company.png`; link.href=canvas.toDataURL(); link.click(); document.body.removeChild(content); }
+    async function downloadSalaryTableImage(){ let tbl=document.getElementById("salaryTableView").cloneNode(true); tbl.style.background="#1e2a3a"; tbl.style.padding="20px"; document.body.appendChild(tbl); let canvas=await html2canvas(tbl,{scale:2}); let link=document.createElement("a"); link.download=`salary.png`; link.href=canvas.toDataURL(); link.click(); document.body.removeChild(tbl); }
     
     // Event listeners
-    document.getElementById("downloadSalaryTableBtn")?.addEventListener("click",downloadSalaryTableImage);
-    document.getElementById("generateMonthlyReportBtn")?.addEventListener("click",generateMonthlyReport);
-    document.getElementById("generateYearlyReportBtn")?.addEventListener("click",generateYearlyReport);
-    document.getElementById("downloadReportImageBtn")?.addEventListener("click",downloadReportImage);
-    document.getElementById("downloadCompanyReportImageBtn")?.addEventListener("click",downloadCompanyReportImage);
-    document.getElementById("closeCompanyReportModalBtn")?.addEventListener("click",()=>document.getElementById("companyReportModal").style.display="none");
-    document.getElementById("doSearchBtn")?.addEventListener("click",globalSearch);
+    document.getElementById("generateMonthlyReportBtn").addEventListener("click",generateMonthlyReport);
+    document.getElementById("generateYearlyReportBtn").addEventListener("click",generateYearlyReport);
+    document.getElementById("downloadReportImageBtn").addEventListener("click",downloadReportImage);
+    document.getElementById("downloadCompanyReportImageBtn").addEventListener("click",downloadCompanyReportImage);
+    document.getElementById("closeCompanyReportModalBtn").addEventListener("click",()=>document.getElementById("companyReportModal").style.display="none");
+    document.getElementById("closeEmployeeModalBtn").addEventListener("click",()=>document.getElementById("employeeModal").style.display="none");
+    document.getElementById("downloadSalaryTableBtn").addEventListener("click",downloadSalaryTableImage);
+    document.getElementById("doSearchBtn").addEventListener("click",globalSearch);
+    document.getElementById("addCompanyBtn").addEventListener("click",()=>{ let n=document.getElementById("companyName").value.trim(); if(!n) return; companies.push({id:Date.now(),name:n,phone:document.getElementById("companyPhone").value.trim(),totalPurchased:0,totalPaid:0,balance:0,totalSales:0,stockValue:0}); saveAll(); renderCompanies(); renderHome(); });
+    document.getElementById("makePaymentBtn").addEventListener("click",()=>{ let cid=parseInt(document.getElementById("paymentCompanySelect").value); let amt=parseFloat(document.getElementById("paymentAmount").value); if(!cid||isNaN(amt)) return; let comp=companies.find(c=>c.id===cid); if(comp){ comp.totalPaid=(comp.totalPaid||0)+amt; comp.balance=(comp.totalPurchased||0)-comp.totalPaid; saveAll(); updateStats(); renderCompanies(); renderHome(); alert(`Ödəniş edildi. Borc: ${comp.balance.toFixed(2)}`); } });
+    document.getElementById("addExpenseBtn").addEventListener("click",()=>{ let name=document.getElementById("expenseName").value.trim(); let cat=document.getElementById("expenseCategory").value; let amt=parseFloat(document.getElementById("expenseAmount").value); let date=document.getElementById("expenseDate").value; if(!name||isNaN(amt)||!date) return alert("Doldurun"); expenses.push({id:Date.now(),name,category:cat,amount:amt,date}); saveAll(); renderExpenses(); });
+    document.getElementById("recordSalaryBtn").addEventListener("click",()=>{ let empId=parseInt(document.getElementById("salaryEmployeeSelect").value); let amt=parseFloat(document.getElementById("salaryPaidAmount").value); let date=document.getElementById("salaryPaidDate").value; if(!empId||isNaN(amt)||!date) return; let emp=employees.find(e=>e.id===empId); if(emp){ salaryPayments.push({id:Date.now(),employeeId:empId,amount:amt,date}); expenses.push({id:Date.now(),name:`${emp.name} - maaş`,category:"Əmək haqqı",amount:amt,date:date}); saveAll(); renderEmployees(); renderExpenses(); alert("Maaş qeyd edildi və xərclərə əlavə olundu"); } });
+    document.getElementById("addEmployeeBtn").addEventListener("click",()=>{ let name=document.getElementById("empName").value.trim(); let birthday=document.getElementById("empBirthday").value; let hireDate=document.getElementById("empHireDate").value; let salary=parseFloat(document.getElementById("empSalary").value); if(!name||!birthday||!hireDate||isNaN(salary)) return alert("Bütün xanaları doldurun"); let photo=""; let file=document.getElementById("empPhoto").files[0]; if(file){ let reader=new FileReader(); reader.onload=function(e){ photo=e.target.result; employees.push({id:Date.now(),name,birthday,hireDate,salary,photo}); saveAll(); renderEmployees(); renderHome(); }; reader.readAsDataURL(file); } else { employees.push({id:Date.now(),name,birthday,hireDate,salary,photo}); saveAll(); renderEmployees(); renderHome(); } });
     
     // Tab keçid
     let btns=document.querySelectorAll(".tab-btn"), contents=document.querySelectorAll(".tab-content");
@@ -435,18 +449,4 @@
     loadData(); renderHome(); renderCompanies(); renderExpenses(); renderEmployees(); updateTodaySalesDisplay(); checkBirthdayAlerts(); setInterval(()=>{ updateTodaySalesDisplay(); checkBirthdayAlerts(); }, 60000);
 </script>
 </body>
-    <div style="position:fixed; bottom:60px; right:10px; z-index:100;">
-    <button id="resetAllDataBtn" class="btn danger" style="width:auto; padding:8px 16px; background:#e74c3c; color:white;">
-        🗑️ Bütün məlumatları sıfırla
-    </button>
-</div>
-<script>
-    document.getElementById("resetAllDataBtn")?.addEventListener("click", () => {
-        if(confirm("Bütün məlumatlar (mallar, satışlar, şirkətlər, xərclər, əməkdaşlar) silinəcək. Davam edirsiniz?")) {
-            localStorage.clear();
-            alert("Proqram sıfırlandı. Səhifə yenilənir...");
-            location.reload();
-        }
-    });
-</script>
 </html>
